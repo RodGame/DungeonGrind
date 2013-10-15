@@ -1,0 +1,65 @@
+TODO: 
+
+==> IMPLEMENT THIS WEEK
+
+
+o Corridor + start/end of dungeon
+o INcreased difficulty in dungeon
+o Update skill leveling system
+o Building Mechanic
+o Implement Sword/Axe from the downloaded 3dmodel
+
+==> Refactor
+
+o Turn Inventory in a static class. Probably GameManager too.
+o CraftSystem/BuildSystem
+	-> Should be an entity above that contain functino for both
+	-> Test for ressource/building/item should be centralized and be used the same way. Variable should be renamed accordingly.
+o Quest/Reward system should be used EVERYWHERE
+	-> Reparing cart (misc) 
+
+==> BUG
+
+o Mouse hiding   at start WebPlayer
+o Mouse position at start Client
+o 1-line discussion window is too small
+o Weapon doesn't go to original position at end of attack
+
+
+==> MECHANICS TO ADD
+
+o Building system
+	-> Control over building position(Follow ground)
+	-> Detect collision
+
+o Stamina/Food system
+o Different tree/rock
+
+==> ASSETS POSSIBLE
+o BaseMale
+o Gorilla
+
+==> BUILDING TO ADD
+o Walls
+o Cloture
+o Farm
+o Smelting for minerals
+o Fire
+o Tent
+o Chest
+
+==> ITEM TO ADD
+o Bow
+o Torch
+o Spear
+o Potion
+
+==> SPELL TO ADD
+o Bow
+o Torch
+o Spear
+o 
+
+
+
+
