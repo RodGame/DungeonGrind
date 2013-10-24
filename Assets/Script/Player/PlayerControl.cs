@@ -51,7 +51,7 @@ public class PlayerControl : MonoBehaviour {
 		Ray _ray;
 		RaycastHit _hitInfo;	
 		int mouseLeftButton = 0;
-			
+		int mouseRightButton = 1;	
 		// RayCast if mouseRightButton is pressed
 		if(Input.GetMouseButtonDown(mouseLeftButton))
 		{
@@ -60,6 +60,14 @@ public class PlayerControl : MonoBehaviour {
 			{
 				_GameManager.RaycastAnalyze(_hitInfo.collider);
 			}
+			else
+			{
+				_GameManager.RaycastAnalyze(null);	
+			}
+		}
+		else if(Input.GetMouseButtonDown(mouseRightButton))
+		{
+			MagicBook.CastSpell(MagicBook.ActiveSpell);
 		}
 	}
 	
@@ -69,14 +77,18 @@ public class PlayerControl : MonoBehaviour {
 		{
 			_GameManager.ToggleState();
 		}
-		else if(Input.GetKeyDown(KeyCode.F1)){_PlayerHUD.SwitchBoxFromKeys("F1");}
-		else if(Input.GetKeyDown(KeyCode.F2)){_PlayerHUD.SwitchBoxFromKeys("F2");}
-		else if(Input.GetKeyDown(KeyCode.F3)){_PlayerHUD.SwitchBoxFromKeys("F3");}
-		else if(Input.GetKeyDown(KeyCode.F4)){_PlayerHUD.SwitchBoxFromKeys("F4");}
-		else if(Input.GetKeyDown(KeyCode.F5)){_PlayerHUD.SwitchBoxFromKeys("F5");}
-		else if(Input.GetKeyDown(KeyCode.F6)){_PlayerHUD.SwitchBoxFromKeys("F6");}
-		else if(Input.GetKeyDown(KeyCode.F7)){_PlayerHUD.SwitchBoxFromKeys("F7");}
-		else if(Input.GetKeyDown(KeyCode.F8)){_PlayerHUD.SwitchBoxFromKeys("F8");}
+		else if(Input.GetKeyDown(KeyCode.F1) || Input.GetKeyDown(KeyCode.I)){_PlayerHUD.SwitchBoxFromKeys("F1");}      //Item
+		else if(Input.GetKeyDown(KeyCode.F2) || Input.GetKeyDown(KeyCode.C)){_PlayerHUD.SwitchBoxFromKeys("F2");}      //Stats
+		else if(Input.GetKeyDown(KeyCode.F3) || Input.GetKeyDown(KeyCode.K)){_PlayerHUD.SwitchBoxFromKeys("F3");}      //Skills
+		else if(Input.GetKeyDown(KeyCode.F4) || Input.GetKeyDown(KeyCode.P)){_PlayerHUD.SwitchBoxFromKeys("F4");}      //Spell
+		else if(Input.GetKeyDown(KeyCode.F5) || Input.GetKeyDown(KeyCode.B)){_PlayerHUD.SwitchBoxFromKeys("F5");}      //Build
+		else if(Input.GetKeyDown(KeyCode.F6) || Input.GetKeyDown(KeyCode.T)){_PlayerHUD.SwitchBoxFromKeys("F6");}      //Task
+		else if(Input.GetKeyDown(KeyCode.F7) || Input.GetKeyDown(KeyCode.M)){_PlayerHUD.SwitchBoxFromKeys("F7");}      //Map
+		else if(Input.GetKeyDown(KeyCode.F8))                               {_PlayerHUD.SwitchBoxFromKeys("F8");}      //Abandon
+		else if(Input.GetKeyDown(KeyCode.F9) || Input.GetKeyDown(KeyCode.Q)){_PlayerHUD.SwitchBoxFromKeys("F9");}      //Save
+		else if(Input.GetKeyDown(KeyCode.F10)){_PlayerHUD.SwitchBoxFromKeys("F10");}
+		else if(Input.GetKeyDown(KeyCode.F11)){_PlayerHUD.SwitchBoxFromKeys("F11");}
+		else if(Input.GetKeyDown(KeyCode.F12)){_PlayerHUD.SwitchBoxFromKeys("F12");}
 		//else if(Input.GetKeyDSwitchBoxFromKeysect.FindGameObjectWithTag("Spartan").animation.animation.CrossFade("run");} 
 	}
 }

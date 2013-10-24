@@ -6,10 +6,10 @@ static class ItemInventory {
 	
 	public static int             InventorySize = 50;
 	public static InventorySlot[] InventoryList = new InventorySlot[InventorySize];
-	private static Item			  _EquippedItem = GameObject.FindGameObjectWithTag("PlayerMaster").GetComponent<Inventory>().ItemList[(int)ItemName.RockSword];
+	private static Item			  _EquippedItem = null;
 	private static GameManager    _GameManager  = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
-	private static GameObject      _Player      = GameObject.FindGameObjectWithTag("Player");
-	
+	private static GameObject     _Player       = GameObject.FindGameObjectWithTag("Player");
+	private static GameObject     _GO_InstantiatedItem;
 	public struct InventorySlot
     {
         public Item slotItem;
@@ -39,24 +39,27 @@ static class ItemInventory {
 	public static void EquipItem(Item _ItemToEquip)
 	{
 		_EquippedItem = _ItemToEquip;
-		InstatiateItem();
+		InstatiateItemInHand(_ItemToEquip.ItemPrefab);
 	}
 	
-	private static void InstatiateItem()
+	private static void InstatiateItemInHand(GameObject _GO_ToInstantiate)
 	{
-		GameObject _InstantiatedItem;
-		GameObject _ItemToInstantiate = _GameManager.GetComponent<PrefabManager>().Prefab_Item_RockSword;
-		
-		_InstantiatedItem = GameObject.Instantiate(_ItemToInstantiate,Vector3.zero, Quaternion.identity) as GameObject ;
-		_InstantiatedItem.transform.parent = _Player.transform;
-		
-		_InstantiatedItem.transform.localPosition = new Vector3(0.5f,0.30f,1.2f);
-		_InstantiatedItem.tag = "EquippedItem";
+		if(_GO_ToInstantiate != null)
+		{
+			GameObject _ItemToInstantiate = _GO_ToInstantiate;
+			
+			_GO_InstantiatedItem = GameObject.Instantiate(_ItemToInstantiate,Vector3.zero, Quaternion.identity) as GameObject ;
+			_GO_InstantiatedItem.transform.parent = _Player.transform;
+			
+			_GO_InstantiatedItem.transform.localPosition = new Vector3(0.5f,0.30f,1.2f);
+			_GO_InstantiatedItem.tag = "EquippedItem";
+		}
 	}
 	
 	public static void UnequipItem()
 	{
 		_EquippedItem = null;
+		GameObject.Destroy (_GO_InstantiatedItem);
 	}
 	
 	public static void AddItem(Item _ItemToAdd)

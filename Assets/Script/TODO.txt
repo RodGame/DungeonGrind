@@ -2,15 +2,22 @@ TODO:
 
 ==> IMPLEMENT THIS WEEK
 
+HELP
 
-o Corridor + start/end of dungeon
-o INcreased difficulty in dungeon
-o Update skill leveling system
 o Building Mechanic
-o Implement Sword/Axe from the downloaded 3dmodel
+	-> Object should stick to ground
+	-> Turn to red/Prevent positioning on collision
+	-> Add mesh collider to builded
+o Dungeon
+    -> Add Safe Room
+    -> Corridor stop at first room encountered(If not thisroom.int and not 0)
+    -> Add random spawn of prefab
+o Save/Load (http://whydoidoit.com/unityserializer/getting-started-guide/)
+o Monster
+	-> Healthbar in screen when turning around
+o Crafting level doen't give any stats but put it in log	
 
 ==> Refactor
-
 o Turn Inventory in a static class. Probably GameManager too.
 o CraftSystem/BuildSystem
 	-> Should be an entity above that contain functino for both
@@ -19,12 +26,9 @@ o Quest/Reward system should be used EVERYWHERE
 	-> Reparing cart (misc) 
 
 ==> BUG
-
-o Mouse hiding   at start WebPlayer
-o Mouse position at start Client
-o 1-line discussion window is too small
-o Weapon doesn't go to original position at end of attack
-
+- High Priority :  
+o Weapon constantly rotate
+o Spawning in wall in dungeon
 
 ==> MECHANICS TO ADD
 
@@ -34,6 +38,13 @@ o Building system
 
 o Stamina/Food system
 o Different tree/rock
+
+
+
+==========================================================================================================================
+
+
+
 
 ==> ASSETS POSSIBLE
 o BaseMale
@@ -51,14 +62,10 @@ o Chest
 ==> ITEM TO ADD
 o Bow
 o Torch
-o Spear
 o Potion
 
 ==> SPELL TO ADD
-o Bow
-o Torch
-o Spear
-o 
+
 
 
 

@@ -5,7 +5,6 @@ using System;					  // For Enum
 
 public class GameManager : MonoBehaviour {
 	
-	private Inventory _Inventory;
 	private PlayerHUD _PlayerHUD;
 	private GameObject _Player;
 	private GameObject _PlayerMaster;
@@ -14,15 +13,17 @@ public class GameManager : MonoBehaviour {
 	private GameObject _CurObjectInteracted;
 	
 	private float _curProgress = 0;
-	private int _curProgressSpeed = 100;
+	private int _curProgressSpeed = 120;
 	private string _curAction = "None";
 	private string _curZone   = "Camp";
 	private string _curState; //Menu, Play, Talk
 	private int    _distanceInteraction = 6;
-	
 	private int    _discussionStep = 0;
+	private int    _dungeonLevelToSpawn = 0;
+	
 	private List<string> _discussionListString = new List<string>();
 	
+	private int _maxDungeonLevel = 1;
 	
 	public string CurState
 	{
@@ -49,25 +50,40 @@ public class GameManager : MonoBehaviour {
 		set {_curZone = value; }
 	}
 	
+	public int MaxDungeonLevel
+	{
+		get {return _maxDungeonLevel; }
+		set {_maxDungeonLevel = value; }
+	}
+	
+	public int DungeonLevelToSpawn
+	{
+		get {return _dungeonLevelToSpawn; }
+		set {_dungeonLevelToSpawn = value; }
+	}
+	
 	void Awake ()
 	{
 		Character.IniCharacter();
 		Bestiary.IniBestiary();
+		Inventory.IniInventory();
 		
 		_Player       = GameObject.FindGameObjectWithTag("Player");
 		_PlayerCam    = GameObject.FindGameObjectWithTag("MainCamera").camera;
 		_PlayerMaster = GameObject.FindGameObjectWithTag("PlayerMaster");
-		_Inventory    = GameObject.FindGameObjectWithTag("PlayerMaster").GetComponent<Inventory>();	
 		_PlayerHUD    = _PlayerMaster.GetComponent<PlayerHUD>();
 		
-		ChangeState("Play");
 	}
 	// Use this for initialization
-	void Start () 
+	public void IniGame () 
 	{
+		
+		SaveLoadSystem.Load();
 		Character.SetActiveTask(Character.TaskList[(int)TaskName.Spartan0]);
 		
 		SkipTutorial();
+		Camera.mainCamera.GetComponent<Skybox>().material = GetComponent<TextureManager>().Material_Skybox_Camp;
+		ChangeState("Play");
 	}
 	
 	// Update is called once per frame
@@ -100,12 +116,36 @@ public class GameManager : MonoBehaviour {
 			}
 		}
 		
+		if(BuildSystem.BuildState != 0)
+		{
+			float rotaSpeed = 2.0f;
+			if(Input.GetKey(KeyCode.Q))
+			{
+				BuildSystem.CreatedBuilding.transform.RotateAroundLocal(new Vector3(0.0f,1.0f,0.0f), rotaSpeed*Time.deltaTime);
+			}
+			else if(Input.GetKey(KeyCode.E))
+			{
+				BuildSystem.CreatedBuilding.transform.RotateAroundLocal(new Vector3(0.0f,1.0f,0.0f), -rotaSpeed*Time.deltaTime);
+			} 
+			
+			if(Input.GetMouseButtonDown(0))
+			{
+				BuildSystem.CreatedBuilding.transform.parent = null;
+				BuildSystem.BuildState = 0;
+				_curState = "Play";
+			}
+		}
+		
+		//Regenerate Mana for character
+		Character.RegenMP();
+		
+		//Loop trough all task to look for completion
 		TestForTaskCompletion();
 	}
 	
 	void UpdateBar() {
 		
-		if(_curAction != "Fighting")
+		if(_curAction != "Fighting" && _curAction != "Default")
 		{
 			if(Vector3.Distance(_CurObjectInteracted.transform.position, _Player.transform.position) < _distanceInteraction)
 			{
@@ -128,18 +168,38 @@ public class GameManager : MonoBehaviour {
 		else
 		{
 			_curProgress = _curProgress + (_curProgressSpeed*Time.deltaTime);
+			RotateEquippedItem();
 			
-			float _angleToRotate = 0.1f*Mathf.Sin(((Mathf.Deg2Rad*_curProgress/100*180) + Mathf.PI/2));
-			Debug.Log (_angleToRotate);
-			
-			GameObject.FindGameObjectWithTag("EquippedItem").transform.RotateAroundLocal(new Vector3(1.0f,0.0f,0.0f), _angleToRotate);
 			
 			if(_curProgress >= 100)
 			{
-				_curProgress =  _curProgress - 100;
+				_curProgress =  0;
 				CompleteBar();
 				_curAction = "None";
 				_curProgress = 0;
+			}
+		}
+	}
+	
+	private void RotateEquippedItem()
+	{
+		GameObject _GO_EquippedItem = GameObject.FindGameObjectWithTag("EquippedItem");
+		Quaternion _originalRotation = Quaternion.identity;
+		if(_GO_EquippedItem != null)
+		{
+			if(_curProgress == 0)
+			{
+				_originalRotation = _GO_EquippedItem.transform.rotation;	
+			}
+			
+			if(_curProgress >= 100)
+			{
+				_GO_EquippedItem.transform.rotation = _originalRotation;
+			}
+			else
+			{
+				float _angleToRotate = 0.1f*Mathf.Sin(((Mathf.Deg2Rad*_curProgress/100*180) + Mathf.PI/2));
+				_GO_EquippedItem.transform.RotateAroundLocal(new Vector3(1.0f,0.0f,0.0f), _angleToRotate);
 			}
 		}
 	}
@@ -149,7 +209,7 @@ public class GameManager : MonoBehaviour {
 		if(_curAction != "Fighting")
 		{
 			Character.ProcAction(_curAction);
-			_Inventory.ProcAction(_curAction);
+			Inventory.ProcAction(_curAction);
 		}
 		
 	}
@@ -174,11 +234,12 @@ public class GameManager : MonoBehaviour {
 			if(_Gates[i].name == "Gate")
 			{
 				_NewRotation = new Vector3(270, 180, 0);
-				Debug.Log (_NewRotation);
 				_Gates[i].transform.rotation = Quaternion.Euler(_NewRotation.x, _NewRotation.y, _NewRotation.z);
 			}
 		}
-		//_Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table
+		//Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table
+		
+		ItemInventory.EquipItem (Inventory.ItemList[(int)ItemName.RockSword]);
 	}
 	
 	void TestForTaskCompletion()
@@ -203,7 +264,6 @@ public class GameManager : MonoBehaviour {
 	
 	public void ClaimReward(string _taskReward)
 	{
-		Debug.Log (_taskReward);
 		char _differentTypeDelimiter  = ',';
 		string _curType;
 		string _curReward;
@@ -211,7 +271,7 @@ public class GameManager : MonoBehaviour {
 		if( _taskReward != "None")
 		{
 			string[] _curRewardPart = _taskReward.Split (_differentTypeDelimiter); //Parse the Requirement string the _differentTypeDelimiter(,) char
-			List<CraftSystem.ExpenditureNeeded> _RewardToGive  = new List<CraftSystem.ExpenditureNeeded>();	//Declare a list that contain all the ressource needed
+			List<Utility.ParsedString> _RewardToGive  = new List<Utility.ParsedString>();	//Declare a list that contain all the ressource needed
 			
 			for(int i = 0; i < _curRewardPart.Length; i++)
 			{
@@ -220,7 +280,7 @@ public class GameManager : MonoBehaviour {
 				_curReward = _curRewardPart[i].Substring(6);
 				if(_curType != "[DISS]")
 				{
-					_RewardToGive = CraftSystem.parseString(_curReward);
+					_RewardToGive = Utility.parseString(_curReward);
 				}
 				
 				switch(_curType)
@@ -244,29 +304,26 @@ public class GameManager : MonoBehaviour {
 						break;
 					
 					case "[RESS]":
-						_RewardToGive = CraftSystem.parseString(_curReward);
+						_RewardToGive = Utility.parseString(_curReward);
 						for(int j = 0; j <  _RewardToGive.Count; j++)
 						{
-							RessourceName RessourceIndex = (RessourceName) Enum.Parse(typeof(RessourceName), _RewardToGive[j].type);  
-							Debug.Log (_curReward);
-							Debug.Log (_Inventory.RessourceList[(int)RessourceIndex].Name);
-							_Inventory.RessourceList[(int)RessourceIndex].CurValue += Convert.ToInt16(_RewardToGive[j].nbr);
+							RessourceName RessourceIndex = (RessourceName) Enum.Parse(typeof(RessourceName), _RewardToGive[j].type); 
+							Inventory.RessourceList[(int)RessourceIndex].CurValue += Convert.ToInt16(_RewardToGive[j].nbr);
 						}
 						break;
 					
 					case "[ITEM]":
-						Debug.Log ("Item");
-						_RewardToGive = CraftSystem.parseString(_curReward);
+						_RewardToGive = Utility.parseString(_curReward);
 						for(int j = 0; j <  _RewardToGive.Count; j++)
 						{
 							ItemName ItemIndex = (ItemName) Enum.Parse(typeof(ItemName), _RewardToGive[j].type);  
 							for(int k = 0; k < _RewardToGive[j].nbr; k++)
 							{
-								//Debug.Log ("Gave 1 : " + _Inventory.ItemList[(int)ItemIndex].Name );
-								ItemInventory.AddItem(_Inventory.ItemList[(int)ItemIndex]);
+								//Debug.Log ("Gave 1 : " + Inventory.ItemList[(int)ItemIndex].Name );
+								ItemInventory.AddItem(Inventory.ItemList[(int)ItemIndex]);
 							}
 						
-							//_Inventory.ItemList[(int)ItemIndex].CurValue += Convert.ToInt16(_RewardToGive[j].nbr);
+							//Inventory.ItemList[(int)ItemIndex].CurValue += Convert.ToInt16(_RewardToGive[j].nbr);
 						}
 						break;
 				}
@@ -281,13 +338,13 @@ public class GameManager : MonoBehaviour {
 		if(Application.loadedLevelName == "Camp")
 		{
 			if((_Player.transform.position.x > -26 && _Player.transform.position.x < 13) && (_Player.transform.position.z > -30 && _Player.transform.position.z < 11))
-			{
+			{	
 				_curZone = "Camp";
 			}
-			else if((_Player.transform.position.x > -53 && _Player.transform.position.x < -42) && (_Player.transform.position.z > -12 && _Player.transform.position.z < -5))
+			else if((_Player.transform.position.x > -48 && _Player.transform.position.x < -40) && (_Player.transform.position.z > -11 && _Player.transform.position.z < -5))
 			{
-				_curZone = "Dungeon Warp";
 				EnterDungeon();
+				_curZone = "Dungeon Warp";
 			}
 			else
 			{
@@ -296,7 +353,11 @@ public class GameManager : MonoBehaviour {
 			
 			if(_lastZone != _curZone)
 			{
-				_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[ZONE] You entered a new zone : " + _curZone);	
+				_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[ZONE] You entered a new zone : " + _curZone);
+				if(_lastZone == "Dungeon Warp")
+				{
+					ChangeState ("Play");	
+				}
 			}
 		}
 		
@@ -304,8 +365,10 @@ public class GameManager : MonoBehaviour {
 	
 	public void EnterDungeon()
 	{
-        Application.LoadLevel("Dungeon");
-		_curZone = "Dungeon";
+		if(_curState == "Play")
+		{
+			_PlayerHUD.ChangeBoxView ("DungeonMenu");
+		}
 	}
 	
 	public void ChangeDungeonState(string _newState)
@@ -393,44 +456,59 @@ public class GameManager : MonoBehaviour {
 	
 	public void RaycastAnalyze(Collider _collidedObj)
 	{
-		if(Vector3.Distance(_collidedObj.transform.position, _Player.transform.position) <= _distanceInteraction)
+		if(BuildSystem.BuildState == 0)
 		{
-			_CurObjectInteracted = _collidedObj.gameObject;
-			switch(_collidedObj.tag)
+			if(_collidedObj != null)
 			{
-				case "Tree":
-					DoAction("Woodcutting");
-					break;
-				case "Rock":
-					DoAction("Mining");
-					break;
-				case "Monster":
-					DoAction("Fighting");
-					break;
-				case "Spartan":
-					_Spartan.GetComponent<SpartanInteract>().InteractWithPlayer();
-					break;
-				case "CraftingTable": 
-					_PlayerHUD.ChangeBoxView("CraftList");
-					break;
-				case "Interactive":
-					switch(_collidedObj.name)
+				if(Vector3.Distance(_collidedObj.transform.position, _Player.transform.position) <= _distanceInteraction)
+				{
+					_CurObjectInteracted = _collidedObj.gameObject;
+					switch(_collidedObj.tag)
 					{
-						case "Gate":
-							_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[MISC] The door won't open. Maybe spartan know something about this.");	
+						case "Tree":
+							DoAction("Woodcutting");
 							break;
-						case "Cart03":	
-							if(ItemInventory.EquippedItem == _Inventory.ItemList[(int)ItemName.Hammer])
+						case "Rock":
+							DoAction("Mining");
+							break;
+						case "Monster":
+							DoAction("Fighting");
+							break;
+						case "Spartan":
+							_Spartan.GetComponent<SpartanInteract>().InteractWithPlayer();
+							break;
+						case "CraftingTable": 
+							_PlayerHUD.ChangeBoxView("CraftList");
+							break;
+						case "Interactive":
+							switch(_collidedObj.name)
 							{
-								DoUniqueAction("RepairCart");
+								case "Gate":
+									_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[MISC] The door won't open. Maybe spartan know something about this.");	
+									break;
+								case "Cart03":	
+									if(ItemInventory.EquippedItem == Inventory.ItemList[(int)ItemName.Hammer])
+									{
+										DoUniqueAction("RepairCart");
+									}
+									break;
+								default:
+									break;
 							}
 							break;
 						default:
+							DoAction("Default");
 							break;
 					}
-					break;
-				default:
-					break;
+				}
+				else
+				{
+					DoAction("Default");
+				}
+			}
+			else
+			{
+				DoAction("Default");	
 			}
 		}
 	}
@@ -493,15 +571,28 @@ public class GameManager : MonoBehaviour {
 				case "Fighting":
 					if(_curProgress == 0)
 					{
-						_CurObjectInteracted.transform.parent.GetComponent<MonsterAI>().DamageMonster(Character.CurDamage);
+						AttackTarget();
 						_curAction = _newAction;
+						_Player.GetComponent<PlayerSound>().PlaySound("SwordHit");
 					}
 					break;
 				case "Default": 
+					_curAction = _newAction;
+					_Player.GetComponent<PlayerSound>().PlaySound("SwordSwing");
+					break;
+				default:
 					Debug.LogWarning ("No Item in GameManager");
 					break;
 			}
 		}
+	}
+	
+	public void AttackTarget()
+	{
+		_CurObjectInteracted.transform.parent.GetComponent<MonsterProfile>().DamageMonster(Character.CurDamage);
+		Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Fighter],10.0f/Character.SkillList[(int)SkillName.Fighter].Level);
+		//_Player.GetComponent<PlayerSound>().PlaySound("SwordHit");
+		
 	}
 	
 	public void DoUniqueAction(string _actionToDo)
@@ -517,9 +608,9 @@ public class GameManager : MonoBehaviour {
 					//_Spartan.GetComponent<SpartanInteract>().IncreaseStateWithPlayer(); //Todo [MISC]RepairCart for requirement
 					ActivateButtonInHUD(3); // Button3 is Skill Button
 					Character.SkillList[(int)SkillName.Crafter].Unlocked = true;
-					Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Crafter],50); 
+					Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Crafter],50.0f); 
 					break;
-				case "Default": 
+				Default: 
 					Debug.LogWarning ("UNIQUE ACTION NOT FOUND");
 					break;
 			}
@@ -541,5 +632,11 @@ public class GameManager : MonoBehaviour {
 	
 		_PlayerHUD.AddChatLog(_stringToAddChatLog);
 		
+	}
+	
+	public void StartDungeon(int _dungeonLevel)
+	{
+		_dungeonLevelToSpawn = _dungeonLevel;
+		Application.LoadLevel("Dungeon");	
 	}
 }

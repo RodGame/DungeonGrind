@@ -8,15 +8,21 @@ static class BuildSystem {
 	static GameManager   _GameManager   = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	static PrefabManager _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	static GameObject    _Player        = GameObject.FindGameObjectWithTag("Player");
-	
+	public static GameObject CreatedBuilding;
 	static int _buildState; //0 = No build, 1 = Currently Building, 2 = Built
+	
+	static public int BuildState
+	{ 
+		get {return _buildState; }
+		set {_buildState = value; }
+	}
 	
 	public static void BuildBuilding (Building _BuildingToBuild) 
 	{	
 		//_BuildingPosition = new Vector3(_PlayerTransform.transform.position.x + 5, _PlayerTransform.transform.position.y, _PlayerTransform.transform.position.z);
 		
-		List<CraftSystem.ExpenditureNeeded> _buildingRessourceNeeded  = new List<CraftSystem.ExpenditureNeeded>();	//Declare a list that contain all the ressource needed
-		_buildingRessourceNeeded = CraftSystem.parseString(_BuildingToBuild.Recipe);//TODO: Update with GO from object instead of hardcoded craftingtable
+		List<Utility.ParsedString> _buildingRessourceNeeded  = new List<Utility.ParsedString>();	//Declare a list that contain all the ressource needed
+		_buildingRessourceNeeded = Utility.parseString(_BuildingToBuild.Recipe);//TODO: Update with GO from object instead of hardcoded craftingtable
 		
 		if(CraftSystem.TestRessource(_buildingRessourceNeeded) == true) //Test if all ressources are available
 		{
@@ -48,6 +54,11 @@ static class BuildSystem {
 		_BuildingPosition = _PlayerTransform.position + _OffsetToAdd;
 		
 		_BuildingOrientation = _PlayerTransform.rotation * Quaternion.Euler(0, -90, 0);
-		GameObject.Instantiate(_PrefabManager.Prefab_Crafting_Table.gameObject, _BuildingPosition, _BuildingOrientation);
+		CreatedBuilding = GameObject.Instantiate(_newBuilding.BuildingPrefab, _BuildingPosition, _BuildingOrientation) as GameObject;
+		
+		
+		CreatedBuilding.transform.parent = _Player.transform;
+		_buildState = 1;
+		
 	}
 }

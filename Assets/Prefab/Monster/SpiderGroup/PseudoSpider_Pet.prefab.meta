@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: 503c5c3b496808643b3430a131cc1a97
+labels:
+- Critter
+- Insect
+- Spider
+- Alien
+- Pseudo
+- Creature
+NativeFormatImporter:
+  userData: 

@@ -5,8 +5,8 @@ public class Skill {
 	
 	private string _name;
 	private bool _unlocked;
-	private int  _level;
-	private int  _curExp;
+	private int  _level = 1;
+	private float  _curExp;
 	
 	
 	public string Name
@@ -27,7 +27,7 @@ public class Skill {
 		set {_level = value; }
 	}
 	
-	public int CurExp
+	public float CurExp
 	{
 		get {return _curExp; }
 		set {_curExp = value; }
@@ -36,8 +36,11 @@ public class Skill {
 
 // Enumeration of all Skills
 public enum SkillName {
-	Crafter,
+	Constitution,
+	Fighter,
+	IceMage,
+	FireMage,
 	Lumberjack,
 	Miner,
-	Fighter
+	Crafter
 }

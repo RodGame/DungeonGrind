@@ -9,7 +9,8 @@ public class Item {
 	private string  _recipe;
 	private int     _maxStack = 1;
 	private int     _nbrCrafted = 0;
-	private Texture _ItemTexture;
+	private Texture _ItemIcon;
+	private GameObject _ItemPrefab = null;
 	
 	
 	public string Name
@@ -48,10 +49,16 @@ public class Item {
 		set {_nbrCrafted = value; }
 	}
 	
-	public Texture ItemTexture
+	public Texture ItemIcon
 	{
-		get {return _ItemTexture; }
-		set {_ItemTexture = value; }
+		get {return _ItemIcon; }
+		set {_ItemIcon = value; }
+	}
+	
+	public GameObject ItemPrefab
+	{
+		get {return _ItemPrefab; }
+		set {_ItemPrefab = value; }
 	}
 }
 
@@ -62,7 +69,5 @@ public enum ItemName {
 	RockSword,
 	RockAxe,
 	RockPickaxe,
-	GoldSword,
-	GoldAxe,
-	GoldPickaxe
+	RockSpear
 }

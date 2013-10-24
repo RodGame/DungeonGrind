@@ -11,9 +11,22 @@ public class PrefabManager : MonoBehaviour {
         return m_Instance;
     }
     // class 
-    public GameObject Prefab_Crafting_Table;
+    public GameObject Building_CraftingTable;
+	public GameObject Building_WoodenWall;
+	public GameObject Building_WoodenFence;
+	public GameObject Building_WoodenFenceCurve;
+	public GameObject Building_Tent;
 	
-	public GameObject Prefab_Monster_Spider;
+	public GameObject Monster_PseudoSpider;
+	public GameObject Monster_Spider;
+	public GameObject Monster_SpiderQueen;
 	
-	public GameObject Prefab_Item_RockSword;
+	public GameObject Item_RockSword;
+	public GameObject Item_RockAxe;
+	public GameObject Item_RockSpear;
+
+	public GameObject Spell_IceBolt;
+	public GameObject Spell_FireBat;
+	
+	public GameObject Environment_SpiderEggs;
 }

@@ -50,5 +50,9 @@ public class Building {
 
 // Enumeration of all Compound
 public enum BuildingName {
-	CraftingTable
+	CraftingTable,
+	WoodenWall,
+	WoodenFence,
+	WoodenFenceCurve,
+	Tent
 }

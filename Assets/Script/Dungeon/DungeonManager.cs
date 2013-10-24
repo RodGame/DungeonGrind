@@ -1,20 +1,34 @@
 using UnityEngine;
+using System;			      //added to access the enum class
 using System.Collections;
+using System.Collections.Generic; // For List class;
+using Pathfinding; 			      //To update the graph size
 
-public class DungeonManager : MonoBehaviour {
+public class DungeonManager : MonoBehaviour{
 	
 	private GameManager _GameManager;
 	
 	//static Material _Material_BrickWall;
 	//static TextureManager _TextureManager;
-	static int[,] _dungeonMap;
-	static int    _mapSizeX;
-	static int    _mapSizeZ;
-	static int    _monsterToSpawn;
-	static int    _nbrOfRoom;
-	static private GameObject _GO_Ground;
-	static private GameObject _GO_Player;	
+	private int[,] _dungeonMap;
+	private int    _mapSizeX;
+	private int    _mapSizeZ;
+	private string _monsterToSpawn;
+	 
+	private int    _nbrMonsterSpawned;
+	private int    _nbrMonsterLeft;
+	private int    _nbrMonsterKilled;
+	 
+	private int    _disSafeZoneSpawnPlayer = 25;
+	private int    _nbrOfSquareSpawned;
+	private int    _curDungeonLevel;
+	private GameObject _GO_Ground;
+	private GameObject _GO_Player;	
+	private AstarPath  _Astar;
 	
+	private bool _isDungeonStarted = false;
+	
+	public GameObject _TEST_PET;
 	public int[,] DungeonMap
 	{
 		get {return _dungeonMap; }
@@ -33,72 +47,254 @@ public class DungeonManager : MonoBehaviour {
 		set {_mapSizeZ = value; }
 	}
 	
+	public int NbrMonsterKilled
+	{
+		get {return _nbrMonsterKilled; }
+		set {_nbrMonsterKilled = value; }
+	}
+	
+	public int NbrMonsterSpawned
+	{
+		get {return _nbrMonsterSpawned; }
+		set {_nbrMonsterSpawned = value; }
+	}
+	
 	void Start()
 	{
-		_mapSizeX = 50;
-		_mapSizeZ = 50;
-		_monsterToSpawn = 2;
-		_nbrOfRoom = 0;
+		
+		Camera.mainCamera.GetComponent<Skybox>().material = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>().Material_Skybox_Dungeon;
+		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
+		_curDungeonLevel = _GameManager.DungeonLevelToSpawn;
+		
+		_GameManager.ChangeState("Play");
+		
+		_Astar = GameObject.FindGameObjectWithTag ("Astar").GetComponent<AstarPath>();
+		
+		// SETUP DUNGEON PARAMETERS
+		
+		//TODO: DungeonSize
+		
+		DungeonLevelPool.IniDungeonLevelPool();
+		_GameManager.CurZone = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].Name;
+		
+		//Dungeon size and square spawn
+		_mapSizeX = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].SizeX;
+		_mapSizeZ = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].SizeY;
+		_nbrOfSquareSpawned = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].NbrSquareForSpawn;
+		_monsterToSpawn     = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].MonsterList;
+		
+		// Initialize Dungeon
 		IniDungeon(_mapSizeX, _mapSizeZ);
-		_dungeonMap = DungeonGenerator.SpawnDungeon(_mapSizeX,_mapSizeZ,_nbrOfRoom);
-		for(int i = 0; i < _monsterToSpawn; i++)
+		
+		// Spawn Dungeon
+		_dungeonMap = DungeonGenerator.SpawnDungeon(_mapSizeX,_mapSizeZ,_nbrOfSquareSpawned);
+		
+		// Initialize P_Pathfinding and Player
+		IniPathfindGraph(_mapSizeX, _mapSizeZ);
+		IniPlayer(_dungeonMap, _mapSizeX, _mapSizeZ);
+		AstarPath.active.Scan ();
+		
+		
+		//Spawn all monster for the level
+		Debug.Log ("Monster Spawn : " + _monsterToSpawn);
+		SpawnAllMonster(_monsterToSpawn, _dungeonMap, _mapSizeX,_mapSizeZ);
+		
+		_isDungeonStarted = true;
+	}
+	
+	void Update()
+	{
+		
+		if(_isDungeonStarted == true)
 		{
-			SpawnMonster(_mapSizeX,_mapSizeZ);
+			_nbrMonsterLeft = GameObject.FindGameObjectsWithTag("Monster").Length;
+			_nbrMonsterKilled = _nbrMonsterSpawned - _nbrMonsterLeft;
+			
+			if(_nbrMonsterKilled >= _nbrMonsterSpawned)
+			{
+				Win ();
+			}
 		}
+		
+		if(_GO_Player.transform.position.y < -5)
+		{
+			Abandon ();	
+		}
+	}
+	
+	private void IniPlayer(int[,] _mapRooms, int _sizeX, int _sizeZ)
+	{
+		Vector2 _playerPos;
+		
+		Character.RefillMP();
+		
+		_GO_Player = GameObject.FindGameObjectWithTag("Player");
+		_playerPos = FindRandomRoomPosition(_mapRooms,_sizeX, _sizeZ);
+		_GO_Player.transform.position = new Vector3(_playerPos.x, 3.0f, _playerPos.y);
+		
+		//GameObject.Instantiate(_TEST_PET,_GO_Player.transform.position + new Vector3(1,0,1), Quaternion.identity);
 		
 	}
 	
-	public void SpawnMonster(int _sizeX, int _sizeZ)
+	// Find a random position in a room
+	private Vector2 FindRandomRoomPosition(int[,] _mapRooms, int _sizeX, int _sizeZ)
+	{
+		int _tryCounter = 0;
+		int _tryCounterMax = 200;
+		int _x = UnityEngine.Random.Range (1,_sizeX-1);
+		int _z = UnityEngine.Random.Range (1,_sizeZ-1);
+		
+		bool _isInRoom = false;
+		
+		while(_isInRoom == false && _tryCounter < _tryCounterMax)
+		{
+			_isInRoom = true;
+			_x = UnityEngine.Random.Range (1,_sizeX-1);
+			_z = UnityEngine.Random.Range (1,_sizeZ-1);
+			
+			for(int i = _x - 1; i <= _x + 1; i++)
+			{
+				for(int j = _z - 1; j <= _z + 1; j++)
+				{
+					if(_mapRooms[i,j] == 0)
+					{
+						_isInRoom = false;
+					}
+				}
+			}
+			_tryCounter++;
+		}
+		
+		return new Vector2(_x,_z);
+	}
+	
+	// Overloaded function that take a safezone distance fot the player as in input
+	public Vector2 FindRandomRoomPosition(int[,] _mapRooms, int _sizeX, int _sizeZ, int _distanceSafeZone)
+	{
+		int _tryCounter = 0;
+		int _tryCounterMax = 200;
+		bool _isPlayerTooClose;
+		Vector2 _newPosition;
+		Vector2 _playerPosition = new Vector2(_GO_Player.transform.position.x, _GO_Player.transform.position.z);
+		_newPosition = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ);
+		
+		_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
+			
+		while(_isPlayerTooClose == true && _tryCounter < _tryCounterMax)
+		{
+			_newPosition = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ);
+			_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
+			_tryCounter++;
+		}
+		return _newPosition;
+	}
+	
+	public void SpawnAllMonster(string _stringMonsterToSpawn, int[,] _mapRooms, int _sizeX, int _sizeZ)
 	{
 		Vector3 _monsterPosition = new Vector3();
-		_monsterPosition.x = Random.Range(0,_sizeX);
-		_monsterPosition.z = Random.Range(0,_sizeZ);
-		_monsterPosition.y = Utility.FindTerrainHeight(_monsterPosition.x,_monsterPosition.z);
-		_GameManager.GetComponent<MonsterManager>().SpawnMonster(Bestiary.MonsterList[(int)MonsterName.Spider],	_monsterPosition);
+		Vector2 _spawnPos;
+		_nbrMonsterSpawned = 0;
+		List<Utility.ParsedString> _ListMonsterToSpawn  = new List<Utility.ParsedString>();	//Declare a list that contain all the monster to spawn
+		
+		_ListMonsterToSpawn = Utility.parseString (_stringMonsterToSpawn);
+		
+		for(int i = 0; i < _ListMonsterToSpawn.Count; i++)
+		{
+			MonsterName _MonsterIndex = (MonsterName) Enum.Parse(typeof(MonsterName), _ListMonsterToSpawn[i].type); 
+			Monster MonsterToSpawn = Bestiary.MonsterList[(int)_MonsterIndex];
+			for(int j = 0; j < _ListMonsterToSpawn[i].nbr; j++)
+			{
+				_nbrMonsterSpawned++;
+				_spawnPos = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ, _disSafeZoneSpawnPlayer);
+				_monsterPosition.x = _spawnPos.x;
+				_monsterPosition.z = _spawnPos.y;
+				_monsterPosition.y = Utility.FindTerrainHeight(_monsterPosition.x,_monsterPosition.z) + 0.5f;
+				
+				Bestiary.SpawnMonster(MonsterToSpawn,	_monsterPosition);
+			}
+		}
+		_nbrMonsterKilled = 0;
 	}
+	
+	/*public void SpawnMonster(Vector3 _monsterPosition)
+	{	
+		Bestiary.SpawnMonster(Bestiary.MonsterList[(int)MonsterName.Spider],	_monsterPosition);
+	}
+	*/
+	
+	/*public void SpawnSpiders(int[,] _mapRooms, int _sizeX, int _sizeZ)
+	{
+		Vector3 _monsterPosition = new Vector3();
+		Vector2 _spawnPos = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ);
+		
+		_monsterPosition.x = _spawnPos.x;
+		_monsterPosition.z = _spawnPos.y;
+		_monsterPosition.y = Utility.FindTerrainHeight(_monsterPosition.x,_monsterPosition.z);
+		Bestiary.SpawnMonster(Bestiary.MonsterList[(int)MonsterName.Spider],	_monsterPosition);
+	}*/
 	
 	public void IniDungeon(int _sizeX, int _sizeZ)
 	{
-		Transform _playerTransform;
 		Transform _groundTransform;
-		
-		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
-		//_GO_MeshHolder = new GameObject();
-		//_TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
-		//_Material_BrickWall = _TextureManager.Material_Dungeon_BrickWall;
 		_GO_Ground = GameObject.FindGameObjectWithTag("Ground");
-		_GO_Player = GameObject.FindGameObjectWithTag("Player");
-		
-		
 		_groundTransform = _GO_Ground.transform;
-		_playerTransform = _GO_Player.transform;
+		
 		
 		_groundTransform.localScale = new Vector3(_sizeX  , _groundTransform.localScale.y, _sizeZ  );
-		_groundTransform.position   = new Vector3(_sizeX/2, 0.0f                         , _sizeZ/2);
-		_playerTransform.position   = new Vector3(_sizeX/2, 3.0f                         , _sizeZ/2);
+		_groundTransform.position   = new Vector3(_sizeX/2, 0.0f                         , _sizeZ/2);	
+	}
+	
+	// Initiate, resize and Scan the pathfind GridGraph
+	public void IniPathfindGraph(int _sizeX, int _sizeZ)
+	{
+		GridGraph _Graph = AstarPath.active.astarData.gridGraph;
+		//AstarPath.active.graph
 		
-		
+		_Graph.width = _sizeX;
+		_Graph.depth = _sizeZ;
+		_Graph.center = new Vector3(_sizeX/2, 0.0f, _sizeZ/2);	
+		_Graph.UpdateSizeFromWidthDepth();
+		_Graph.Scan();
+		_Astar.Scan ();
 	}
 	
 	public void Abandon()
 	{
-		Application.LoadLevel("Camp");
-		_GO_Player.transform.position = new Vector3(-35.0f, 2.0f, -10.0f);
-		_GameManager.AddChatLogHUD ("[DUNG] You abandonned the dungeon");
+		_GameManager.AddChatLogHUD ("[DUNG] You ABANDONNED the dungeon!!!");
+		CloseDungeon();
 	}
 	
 	public void Lose()
 	{
-		Application.LoadLevel("Camp");
-		_GO_Player.transform.position = new Vector3(-35.0f, 2.0f, -10.0f);
-		_GameManager.AddChatLogHUD ("[DUNG] You failed to finish the dungeon");
+		_GameManager.AddChatLogHUD ("[DUNG] You DIED in the dungeon!!!");
+		CloseDungeon();
 	}
 	
 	public void Win()
 	{
+		Debug.Log ("LVL : " + _GameManager.DungeonLevelToSpawn);
+		Character.GainInfluences(_GameManager.DungeonLevelToSpawn);
+		if(_curDungeonLevel == _GameManager.MaxDungeonLevel)
+		{
+			_GameManager.MaxDungeonLevel++;
+		}
+		_GameManager.AddChatLogHUD ("[DUNG] You WON the dungeon!!!");
+		CloseDungeon();
+	}
+	
+	public void CloseDungeon()
+	{
+		_GameManager.CurZone = "Camp";
 		Application.LoadLevel("Camp");
+		_GO_Player.transform.position = new Vector3(-45.0f, 2.0f, -10.0f);
+	
+		
+		
 		_GO_Player.transform.position = new Vector3(-35.0f, 2.0f, -10.0f);
-		_GameManager.AddChatLogHUD ("[DUNG] You finished the dungeon");
+		Character.RefillHP();
+		Character.RefillMP();
+		SaveLoadSystem.Save ();
+		Camera.mainCamera.GetComponent<Skybox>().material = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>().Material_Skybox_Camp;
 	}
 	
 }

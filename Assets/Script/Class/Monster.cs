@@ -13,6 +13,7 @@ public class Monster{
 	private float   _attackRange = 2.0f;
 	private float   _sightRange  = 10.0f;
 	private float   _moveSpeed   = 3.00f;
+	private float   _skillReward = 1.0f;
 	
 	private GameObject _MonsterPrefab;
 	
@@ -82,9 +83,17 @@ public class Monster{
 		get {return _MonsterPrefab; }
 		set {_MonsterPrefab = value; }
 	}
+	public float SkillReward
+	{
+		get {return _skillReward; }
+		set {_skillReward = value; }
+	}
+	
 }
 
 // Enumeration of all Compound
 public enum MonsterName {
+	PseudoSpider,
 	Spider,
+	SpiderQueen
 }

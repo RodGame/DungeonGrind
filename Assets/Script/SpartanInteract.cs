@@ -6,7 +6,6 @@ public class SpartanInteract : MonoBehaviour {
 	
 	private Transform _PlayerTransform;
 	private GameManager _GameManager;
-	private Inventory   _Inventory;
 	
 	private int  _stateWithPlayer = 1;
 	private bool _isStateInteractedOnce = false;
@@ -14,7 +13,6 @@ public class SpartanInteract : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		_GameManager = GameObject.FindGameObjectWithTag ("GameMaster").GetComponent<GameManager>();
-		_Inventory   = GameObject.FindGameObjectWithTag ("PlayerMaster").GetComponent<Inventory>(); 
 		animation.animation.wrapMode = WrapMode.Loop;
 	}
 	
@@ -58,7 +56,7 @@ public class SpartanInteract : MonoBehaviour {
 					ListOfStrings.Add("Hi there adventurer. My name is Spartan ↓↓");
 					ListOfStrings.Add("I'm here to help you become a hero.\n\n Prove me you're not useless and repair the cart behind me ↓↓");
 					ListOfStrings.Add("Oh I forgot, take that hammer and make sure to equip it!");
-					//ItemInventory.AddItem (_Inventory.ItemList[(int)ItemName.Hammer])
+					//ItemInventory.AddItem (Inventory.ItemList[(int)ItemName.Hammer])
 					
 					_GameManager.ActivateButtonInHUD(4); //Button4 is Item
 					_GameManager.ActivateButtonInHUD(5); //Button4 is Task
@@ -79,7 +77,7 @@ public class SpartanInteract : MonoBehaviour {
 					ListOfStrings.Add("I have plan for a crafting table here. Can you make one ?");
 					Debug.Log ("Activate Buttons");
 					_GameManager.ActivateButtonInHUD(0); //Button0 is Build
-					_Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table //TODO: Move this in a real reward
+					Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table //TODO: Move this in a real reward
 					_isStateInteractedOnce = true;
 					
 				}
@@ -109,7 +107,8 @@ public class SpartanInteract : MonoBehaviour {
 				{
 					Character.UnlockTask(Character.TaskList[(int)TaskName.Spartan4]);
 				
-					ListOfStrings.Add("Now buy a sword");
+					ListOfStrings.Add("Now go try the dungeon in the crypt!");
+					ListOfStrings.Add("Each time you win, the dungeon get bigger and more monster appears!!");
 				
 					_isStateInteractedOnce = true;
 					

@@ -11,7 +11,6 @@ public class Task {
 	private string  _requirement;
 	private bool  _isUnlocked = false;
 	private bool  _isFinished = false;
-	private Inventory   _Inventory   = GameObject.FindGameObjectWithTag("PlayerMaster").GetComponent<Inventory>  ();	 
 	private GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster"  ).GetComponent<GameManager>();
 	
 	public string Name
@@ -61,22 +60,22 @@ public class Task {
 		string _curType;
 		string _curReq;
 		string[] _curRequirementPart = Requirement.Split (_differentTypeDelimiter); //Parse the Requirement string the _differentTypeDelimiter(,) char
-		List<CraftSystem.ExpenditureNeeded> _ExpenditureNeeded  = new List<CraftSystem.ExpenditureNeeded>();	//Declare a list that contain all the ressource needed
+		List<Utility.ParsedString> _ExpenditureNeeded  = new List<Utility.ParsedString>();	//Declare a list that contain all the ressource needed
 		
 		
 		for(int i = 0; i < _curRequirementPart.Length; i++)
 		{
 			_curType = _curRequirementPart[i].Substring(0,6);
 			_curReq  = _curRequirementPart[i].Substring(6);
-			_ExpenditureNeeded = CraftSystem.parseString(_curReq);
+			_ExpenditureNeeded = Utility.parseString(_curReq);
 			switch(_curType)
 			{
 				case "[BUIL]":
 					for(int j = 0; j <  _ExpenditureNeeded.Count; j++)
 					{
 						BuildingName BuildingIndex = (BuildingName) Enum.Parse(typeof(BuildingName), _ExpenditureNeeded[j].type);  
-						Debug.Log (_ExpenditureNeeded[j].nbr + "/" + _Inventory.BuildingList[(int)BuildingIndex].NbrBuilt + " " +  _ExpenditureNeeded[j].type);
-						if( _Inventory.BuildingList[(int)BuildingIndex].NbrBuilt  < _ExpenditureNeeded[j].nbr)
+						Debug.Log (_ExpenditureNeeded[j].nbr + "/" + Inventory.BuildingList[(int)BuildingIndex].NbrBuilt + " " +  _ExpenditureNeeded[j].type);
+						if( Inventory.BuildingList[(int)BuildingIndex].NbrBuilt  < _ExpenditureNeeded[j].nbr)
 						{
 							_isTaskCompleted = false;
 						}
@@ -95,7 +94,7 @@ public class Task {
 					for(int j = 0; j <  _ExpenditureNeeded.Count; j++)
 					{
 						ItemName ItemIndex = (ItemName) Enum.Parse(typeof(ItemName), _ExpenditureNeeded[j].type); 
-						if( _Inventory.ItemList[(int)ItemIndex].NbrCrafted  < _ExpenditureNeeded[j].nbr)
+						if( Inventory.ItemList[(int)ItemIndex].NbrCrafted  < _ExpenditureNeeded[j].nbr)
 						{
 							_isTaskCompleted = false;
 						}
