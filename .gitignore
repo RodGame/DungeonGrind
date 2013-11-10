@@ -4,6 +4,7 @@ Library
 Library/*
 Assets/External Assets
 Assets/Standard Assets
+BuildedGame
 *.csproj
 *.sln
 *.userprefs
