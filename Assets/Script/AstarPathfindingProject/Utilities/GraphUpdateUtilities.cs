@@ -59,7 +59,19 @@ namespace Pathfinding {
 		 * \param node2 Node which should have a valid path to \a node1. All nodes should be walkable or \a false will be returned.
 		 * \param alwaysRevert If true, reverts the graphs to the old state even if no blocking ocurred
 		 */
-		public static bool UpdateGraphsNoBlock (GraphUpdateObject guo, Node node1, Node node2, bool alwaysRevert = false) {
+		public static bool UpdateGraphsNoBlock (GraphUpdateObject guo, Node node1, Node node2) {
+			bool alwaysRevert = false;
+			
+			List<Node> buffer = ListPool<Node>.Claim ();
+			buffer.Add (node1);
+			buffer.Add (node2);
+			
+			bool worked = UpdateGraphsNoBlock (guo,buffer, alwaysRevert);
+			ListPool<Node>.Release (buffer);
+			return worked;
+		}
+		
+		public static bool UpdateGraphsNoBlock (GraphUpdateObject guo, Node node1, Node node2, bool alwaysRevert) {
 			List<Node> buffer = ListPool<Node>.Claim ();
 			buffer.Add (node1);
 			buffer.Add (node2);
@@ -82,7 +94,48 @@ namespace Pathfinding {
 		 * \param nodes Nodes which should have valid paths between them. All nodes should be walkable or \a false will be returned.
 		 * \param alwaysRevert If true, reverts the graphs to the old state even if no blocking ocurred
 		 */
-		public static bool UpdateGraphsNoBlock (GraphUpdateObject guo, List<Node> nodes, bool alwaysRevert = false) {
+		public static bool UpdateGraphsNoBlock (GraphUpdateObject guo, List<Node> nodes) {
+			bool alwaysRevert = false;
+			
+			//Make sure all nodes are walkable
+			for (int i=0;i<nodes.Count;i++) if (!nodes[i].walkable) return false;
+			
+			//Track changed nodes to enable reversion of the guo
+			guo.trackChangedNodes = true;
+			bool worked = true;
+			
+			AstarPath.RegisterSafeUpdate (delegate () {
+				
+				AstarPath.active.UpdateGraphs (guo);
+				
+				//Make sure graph updates are registered for update and not delayed for performance
+				AstarPath.active.QueueGraphUpdates ();
+				
+				//Call thread safe callbacks, includes graph updates
+				AstarPath.ForceCallThreadSafeCallbacks ();
+				
+				//Check if all nodes are in the same area and that they are walkable, i.e that there are paths between all of them
+				worked = worked && PathUtilities.IsPathPossible (nodes);
+				
+				//If it did not work, revert the GUO
+				if (!worked || alwaysRevert) {
+					guo.RevertFromBackup ();
+					
+					//The revert operation does not revert ALL nodes' area values, so we must flood fill again
+					AstarPath.active.FloodFill ();
+				}
+			},true);
+			
+			//Force the thread safe callback to be called
+			AstarPath.active.FlushThreadSafeCallbacks();
+			
+			//Disable tracking nodes, not strictly necessary, but will slightly reduce the cance that some user causes errors
+			guo.trackChangedNodes = false;
+			
+			return worked;
+		}
+		
+		public static bool UpdateGraphsNoBlock (GraphUpdateObject guo, List<Node> nodes, bool alwaysRevert) {
 			
 			//Make sure all nodes are walkable
 			for (int i=0;i<nodes.Count;i++) if (!nodes[i].walkable) return false;

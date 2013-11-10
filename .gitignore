@@ -2,8 +2,8 @@
 .DS_Store
 Library
 Library/*
-Assets/External Assets/Creatures
-Assets/External Assets/Environment
+Assets/External Assets
+Assets/Standard Assets
 *.csproj
 *.sln
 *.userprefs

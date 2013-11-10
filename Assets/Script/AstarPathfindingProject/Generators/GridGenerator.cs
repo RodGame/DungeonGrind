@@ -561,7 +561,64 @@ A grid graph will update that area and a small margin around it equal to \link P
 		
 		/** Updates position, walkability and penalty for the node.
 		 * Assumes that collision.Initialize (...) has been called before this function */
-		public void UpdateNodePositionCollision (Node node, int x, int z, bool resetPenalty = true) {
+		public void UpdateNodePositionCollision (Node node, int x, int z) {
+			
+			bool resetPenalty = true;
+			
+			node.position = (Int3)matrix.MultiplyPoint3x4 (new Vector3 (x+0.5F,0,z+0.5F));
+			
+			RaycastHit hit;
+			
+			bool walkable = true;
+			
+			node.position = (Int3)collision.CheckHeight ((Vector3)node.position, out hit, out walkable);
+			
+			if (resetPenalty)
+				node.penalty = initialPenalty;//Mathf.RoundToInt (Random.value*100);
+			
+			if (penaltyPosition && resetPenalty) {
+				node.penalty += (uint)Mathf.RoundToInt ((node.position.y-penaltyPositionOffset)*penaltyPositionFactor);
+			}
+			
+			/*if (textureData && textureSourceData != null && x < textureSource.width && z < textureSource.height) {
+				for (int i=0;i<3;i++) {
+					//node.penalty = textureSourceData
+				}
+			}*/
+			//Check if the node is on a slope steeper than permitted
+			if (walkable && useRaycastNormal && collision.heightCheck) {
+				
+				if (hit.normal != Vector3.zero) {
+					//Take the dot product to find out the cosinus of the angle it has (faster than Vector3.Angle)
+					float angle = Vector3.Dot (hit.normal.normalized,collision.up);
+					
+					//Add penalty based on normal
+					if (penaltyAngle && resetPenalty) {
+						node.penalty += (uint)Mathf.RoundToInt ((1F-angle)*penaltyAngleFactor);
+					}
+					
+					//Max slope in cosinus
+					float cosAngle = Mathf.Cos (maxSlope*Mathf.Deg2Rad);
+					
+					//Check if the slope is flat enough to stand on
+					if (angle < cosAngle) {
+						walkable = false;
+					}
+				}
+			}
+			
+			//If the walkable flag has already been set to false, there is no point in checking for it again
+			if (walkable)
+				node.walkable = collision.Check ((Vector3)node.position);
+			else
+				node.walkable = walkable;
+			
+			node.Bit15 = node.walkable;
+			//Equal to (node as GridNode).WalkableErosion = node.walkable, but this is faster
+			
+		}
+		
+		public void UpdateNodePositionCollision (Node node, int x, int z, bool resetPenalty) {
 			
 			node.position = (Int3)matrix.MultiplyPoint3x4 (new Vector3 (x+0.5F,0,z+0.5F));
 			

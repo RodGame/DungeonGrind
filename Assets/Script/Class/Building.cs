@@ -3,6 +3,7 @@ using System.Collections;
 
 public class Building {
 	
+	private int     _id;
 	private string  _name;
 	private bool    _isBuildable;
 	private bool    _isUnlocked;
@@ -10,6 +11,12 @@ public class Building {
 	private string  _recipe;
 	private GameObject _BuildingPrefab;
 	
+	
+	public int Id
+	{
+		get {return _id; }
+		set {_id = value; }
+	}
 	
 	public string Name
 	{

@@ -93,8 +93,8 @@ public class Task {
 				{
 					for(int j = 0; j <  _ExpenditureNeeded.Count; j++)
 					{
-						ItemName ItemIndex = (ItemName) Enum.Parse(typeof(ItemName), _ExpenditureNeeded[j].type); 
-						if( Inventory.ItemList[(int)ItemIndex].NbrCrafted  < _ExpenditureNeeded[j].nbr)
+						WeaponName WeaponIndex = (WeaponName) Enum.Parse(typeof(WeaponName), _ExpenditureNeeded[j].type); 
+						if( Inventory.WeaponList[(int)WeaponIndex].NbrCrafted  < _ExpenditureNeeded[j].nbr)
 						{
 							_isTaskCompleted = false;
 						}

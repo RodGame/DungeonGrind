@@ -64,7 +64,110 @@ public class AstarSerializer3_07 : AstarSerializer {
 	}
 	
 	/** Deserializes a Unity Reference. Deserializes references such as Transform, GameObject, Texture or other unity objects */
-	public override UnityEngine.Object GetUnityReferenceValue (string key, Type type, UnityEngine.Object defaultValue = null) {
+	public override UnityEngine.Object GetUnityReferenceValue (string key, Type type) {
+		UnityEngine.Object defaultValue = null;
+			
+		//Segment --- Should be (except for the defaultValue cast) identical to a segment in GetUnityReferenceValue/GetValue
+		if (!MoveToVariableAnchor (key)) {
+			Debug.Log ("Couldn't find key '"+key+"' in the data, returning default");
+			return (defaultValue == null ? GetDefaultValue (type) : defaultValue) as UnityEngine.Object;
+		}
+		
+		BinaryReader stream = readerStream;
+		
+		int magicNumber = (int)stream.ReadByte ();
+		
+		if (magicNumber == 0) {
+			return (defaultValue == null ? GetDefaultValue (type) : defaultValue) as UnityEngine.Object;//Null reference
+		} else if (magicNumber == 2) {
+			Debug.Log ("The variable '"+key+"' was not serialized correctly and can therefore not be deserialized");
+			return (defaultValue == null ? GetDefaultValue (type) : defaultValue) as UnityEngine.Object;
+		}
+		//Else - magic number is 1 - indicating correctly serialized data
+		//Segment --- End
+		
+		int instanceID = stream.ReadInt32 ();
+		string obName = stream.ReadString ();
+						
+		if (instanceID == -128) {//Magic number
+			return active.gameObject;
+		} else if (instanceID == -129) { //Magic number
+			return active.transform;
+		}
+		
+		//Load scene path, will be "" if it is irrelevant (when not a GameObject or Component)
+		string scenePath = stream.ReadString ();
+		
+		UnityEngine.Object ob3 = null;
+		
+		//Debug.Log ("Scene Path: "+scenePath);
+		if (scenePath != "") {
+			GameObject go = GameObject.Find (scenePath);
+			if (go != null) {
+				if (type == typeof (GameObject)) {
+					return go;
+				}
+				ob3 = go.GetComponent (type);
+				
+				if (ob3 != null && ob3.name == obName) {
+					return ob3;
+				}
+			}
+		}
+		
+		//If we are in the editor, more sophisticated searching can be performed
+		bool didSaveFromEditor = stream.ReadBoolean ();
+		if (readUnityReference_Editor != null && didSaveFromEditor) {
+			UnityEngine.Object eob = readUnityReference_Editor (this,obName,instanceID,type);
+			if (eob != null && eob.name == obName) {
+				return eob;
+			} else if (ob3 != null) {
+				return ob3;
+			} else {
+				return eob;
+			}
+		}
+		
+		//If the editor deserialization didn't come up with a better answer, return ob3 if it isn't null
+		if (ob3 != null) {
+			return ob3;
+		}
+		
+		//Last resort, find all objects of type and check them for the instance ID
+		UnityEngine.Object[] ueObs = Resources.FindObjectsOfTypeAll (type);
+			//UnityEngine.Object.FindObjectsOfType (type);
+		
+		UnityEngine.Object ob1 = null;
+		
+		for (int i=0;i<ueObs.Length;i++) {
+			if (ueObs[i].GetInstanceID () == instanceID) {
+				ob1 = ueObs[i];
+				break;
+			}
+			
+			//Connecting it based on name is a bit too vague
+			/*if (ueObs[i].name == obName) {
+				ob2 = ueObs[i];
+			}*/
+		}
+		
+		if (ob1 != null) {
+			return ob1;
+		}
+		
+		//Try to load from resources
+		UnityEngine.Object ob4 = Resources.Load (obName);
+		
+		return ob4;
+		/*if (ob1 != null) {
+			return ob1;
+		} else {
+			return ob2;
+		}*/
+	}
+	
+	public override UnityEngine.Object GetUnityReferenceValue (string key, Type type, UnityEngine.Object defaultValue) {
+		
 		//Segment --- Should be (except for the defaultValue cast) identical to a segment in GetUnityReferenceValue/GetValue
 		if (!MoveToVariableAnchor (key)) {
 			Debug.Log ("Couldn't find key '"+key+"' in the data, returning default");

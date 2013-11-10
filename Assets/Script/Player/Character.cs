@@ -8,21 +8,20 @@ static class Character {
 	private static int _baseHP     = 80;
 	private static int _maxHP      = _baseHP;
 	private static int _curHP      = _maxHP;
+	private static float _hpPerLevel = 7.5f;
+	private static float _hpExposent = 1.35f;
 	private static int _baseMP     = 100;
 	private static int _maxMP      = _baseMP;
 	private static int _curMP      = _maxMP;
 	private static int _baseDamage = 8;
 	private static int _curDamage  = _baseDamage;
+	private static float _damagePerLevel = 1.0f;
+	private static float _damageExposent = 1.35f;
+	
 	private static float _elapsedTimeManaRegen;
 	private static float _regenTimer = 0.25f;
 	private static int _regenValue = 2;
 	private static int _influencePoints = 0;
-	
-	private static 	float _hpExpPerLevel = 1.5f;
-	private static 	int _damagePerLevel = 2;
-	
-	private static 	int _iceMagicModPerLevel = 2;
-	private static 	int _fireMagicModePerLevel = 2;
 	
 	private static GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	public static Stat[] StatList;
@@ -161,7 +160,6 @@ static class Character {
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
-			
 		}
 	}
 	
@@ -239,11 +237,11 @@ static class Character {
 				SpellList[i].DamageBase      = 3;
 				SpellList[i].DamagePerLevel  = 2.0f;
 				SpellList[i].CdBase          = 0.45f;
-				SpellList[i].CdPerLevel      = -0.02f;
+				SpellList[i].CdPerLevel      = -0.01f;
 				//SpellList[i].RangeBase       = 5.0f;
 				//SpellList[i].RangePerLevel   = 0.25f;
 				SpellList[i].ManaBase        = 15;
-				SpellList[i].ManaPerLevel    = -0.5f;
+				SpellList[i].ManaPerLevel    = -0.4f;
 				
 			}
 			else if(SpellList[i].Name == "FireBat")
@@ -256,11 +254,11 @@ static class Character {
 				SpellList[i].DamageBase      = 6;
 				SpellList[i].DamagePerLevel  = 1.6f;
 				SpellList[i].CdBase          = 0.55f;
-				SpellList[i].CdPerLevel      = -0.025f;
+				SpellList[i].CdPerLevel      = -0.015f;
 				//SpellList[i].RangeBase       = 5.0f;
 				//SpellList[i].RangePerLevel   = 0.25f;
 				SpellList[i].ManaBase        = 30;
-				SpellList[i].ManaPerLevel    = -1f;
+				SpellList[i].ManaPerLevel    = -0.75f;
 			}
 			
 			
@@ -277,13 +275,12 @@ static class Character {
 			case "Mining":
 				GiveExpToSkill(SkillList[(int)SkillName.Miner],25.0f);
 				break;
-			case "Default": 
-				Debug.LogWarning ("No Action in GameManager");
+			case "Default":
 				break;
 		}
 	}
 	
-	public static void GiveExpToSkill(Skill _SkillToInc, float _expToGive)
+	public static void GiveExpToSkill(Skill _SkillToInc, float _expToGive) // TODO: Move this in each skill
 	{
 		_SkillToInc.CurExp = _SkillToInc.CurExp + _expToGive;	
 		if(_SkillToInc.CurExp >= 100.0f)
@@ -314,7 +311,8 @@ static class Character {
 		{
 			_valuePreLevel = Character._maxHP;
 			UpdateStats();
-			_valuPostLevel = Character._maxHP;	
+			_valuPostLevel = Character._maxHP;
+			_curHP += _valuPostLevel - _valuePreLevel;
 			_UpdatedStat = "HP";
 			_GameManager.AddChatLogHUD ("[SKIL] " + _SkillToLevel.Name + " is now level " + _SkillToLevel.Level + " ! " + _UpdatedStat + " " + _valuePreLevel + " -> " + _valuPostLevel);	
 		}
@@ -334,10 +332,8 @@ static class Character {
 	
 	public static void UpdateStats()
 	{
-		
-		_maxHP = _baseHP + (int)(3.0f*Mathf.Pow (SkillList[(int)SkillName.Constitution].Level,1.35f));
-		_curHP = _maxHP;
-		_curDamage = _baseDamage + (int)(Mathf.Pow(SkillList[(int)SkillName.Fighter].Level,1.5f) * _damagePerLevel);
+		_maxHP     = _baseHP     + (int)(_hpPerLevel      * Mathf.Pow (SkillList[(int)SkillName.Constitution].Level, _hpExposent));
+		_curDamage = _baseDamage + (int)( _damagePerLevel * Mathf.Pow(SkillList[(int)SkillName.Fighter      ].Level, _damageExposent));
 		
 	}
 	
@@ -365,11 +361,9 @@ static class Character {
 	public static void LoseHp(int _hpToLose)
 	{
 		_curHP -= _hpToLose;
-		Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Constitution],20.0f/(Mathf.Pow (Character.SkillList[(int)SkillName.Constitution].Level, 2)));
-		Debug.Log ("Lose HP");
+		Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Constitution],_hpToLose/(Mathf.Pow (Character.SkillList[(int)SkillName.Constitution].Level, 1.4f)));	
 		if(_curHP <= 0)
 		{
-			Debug.Log ("Dead");
 			_curHP = 0;
 			Die ();
 		}

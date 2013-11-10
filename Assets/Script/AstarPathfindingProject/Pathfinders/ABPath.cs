@@ -103,7 +103,14 @@ namespace Pathfinding {
 		 * 
 		 * \returns The constructed path object
 		 */
-		public static ABPath Construct (Vector3 start, Vector3 end, OnPathDelegate callback = null) {
+		public static ABPath Construct (Vector3 start, Vector3 end) {
+			OnPathDelegate callback = null;
+			ABPath p = PathPool<ABPath>.GetPath ();
+			p.Setup (start, end, callback);
+			return p;
+		}
+		
+		public static ABPath Construct (Vector3 start, Vector3 end, OnPathDelegate callback) {
 			ABPath p = PathPool<ABPath>.GetPath ();
 			p.Setup (start, end, callback);
 			return p;

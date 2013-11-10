@@ -10,7 +10,10 @@ public class MenuManager : MonoBehaviour {
 	private int _buttonSizeX = (int)(Screen.width  * 0.66f);
 	private int _buttonSizeY = (int)(Screen.height * 0.10f);
 	private int _offsetY     = (int)(Screen.height * 0.05f);
-
+	
+	private string _buttonNewGameString = "New Game (Erase Save)";
+	private int   _confirmTry          = 0;
+	
 	// Use this for initialization
 	void Start () {
 		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
@@ -21,12 +24,31 @@ public class MenuManager : MonoBehaviour {
 	{
 		float _boxPosX;
 		float _boxPosY;
-		
-		if(GUI.Button(new Rect(_buttonPosX, _buttonPosY, _buttonSizeX, _buttonSizeY), "New Game (Erase Save)"))
+		if(GUI.Button(new Rect(_buttonPosX, _buttonPosY, _buttonSizeX, _buttonSizeY), _buttonNewGameString))
 		{
-			PlayerPrefs.DeleteAll();
-			StartGame();
-			
+			if(PlayerPrefs.GetInt ("IsSaveExist") == 1)
+			{
+				if(_confirmTry == 0)
+				{
+					_confirmTry++;
+					_buttonNewGameString = "Are you sure you want to erase your save?";
+				}
+				else if(_confirmTry == 1)
+				{
+					_confirmTry++;
+					_buttonNewGameString = "LAST CHANCE UNTIL SAVE RESET, YES?";
+				}
+				else
+				{
+					PlayerPrefs.DeleteAll();
+					NewGame();
+				}
+			}
+			else
+			{
+				
+				NewGame();
+			}	
 		}
 		if(PlayerPrefs.GetInt ("IsSaveExist") == 0) //If save exist
 		{
@@ -58,6 +80,13 @@ public class MenuManager : MonoBehaviour {
 		}
 	}
 	
+	void NewGame()
+	{
+		PlayerPrefs.DeleteAll();
+		ItemInventory.EquipWeapon (Inventory.WeaponList[(int)WeaponName.RockSword]);
+		StartGame();
+		
+	}
 	void StartGame()
 	{
 		Application.LoadLevel("Camp");

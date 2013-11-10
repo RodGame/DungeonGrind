@@ -7,17 +7,17 @@ static class CraftSystem {
 	
 	static PlayerHUD _PlayerHUD = GameObject.FindGameObjectWithTag("PlayerMaster").GetComponent<PlayerHUD>();
 	
-	public static void CraftItem (Item _ItemToCraft) 
+	public static void CraftItem (Weapon _WeaponToCraft) 
 	{	
 		List<Utility.ParsedString> _itemRessourceNeeded  = new List<Utility.ParsedString>();	//Declare a list that contain all the ressource needed
-		_itemRessourceNeeded = Utility.parseString(_ItemToCraft.Recipe);
+		_itemRessourceNeeded = Utility.parseString(_WeaponToCraft.Recipe);
 		
 		if(TestRessource(_itemRessourceNeeded) == true) //Test if all ressources are available
 		{
-			ItemInventory.AddItem (_ItemToCraft);
-			_ItemToCraft.NbrCrafted++;
+			ItemInventory.AddItem (_WeaponToCraft);
+			_WeaponToCraft.NbrCrafted++;
 			SpendRessource(_itemRessourceNeeded);
-			_PlayerHUD.AddChatLog("[CRAF] " + _ItemToCraft.Name + " has been crafted");
+			_PlayerHUD.AddChatLog("[CRAF] " + _WeaponToCraft.Name + " has been crafted");
 		}
 		
 		

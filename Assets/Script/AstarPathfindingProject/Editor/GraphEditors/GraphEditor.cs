@@ -274,7 +274,42 @@ public class GraphEditor : GraphEditorBase {
 	}
 	
 	/** Draws a small help box with a 'Fix' button to the right. \returns Boolean - Returns true if the button was clicked */
-	public bool FixLabel (string label, string buttonLabel = "Fix", int buttonWidth = 40) {
+	public bool FixLabel (string label) {
+		string buttonLabel = "Fix";
+		int buttonWidth = 4;
+		
+		bool returnValue = false;
+		GUILayout.BeginHorizontal ();
+		GUILayout.Space (14*EditorGUI.indentLevel);
+		GUILayout.BeginHorizontal (AstarPathEditor.helpBox);
+		GUILayout.Label (label, EditorStyles.miniLabel,GUILayout.ExpandWidth (true));
+		if (GUILayout.Button (buttonLabel,EditorStyles.miniButton,GUILayout.Width (buttonWidth))) {
+			returnValue = true;
+		}
+		GUILayout.EndHorizontal ();
+		GUILayout.EndHorizontal ();
+		return returnValue;
+	}
+	
+	public bool FixLabel (string label, string buttonLabel) {
+		int buttonWidth = 40;
+		
+		bool returnValue = false;
+		GUILayout.BeginHorizontal ();
+		GUILayout.Space (14*EditorGUI.indentLevel);
+		GUILayout.BeginHorizontal (AstarPathEditor.helpBox);
+		GUILayout.Label (label, EditorStyles.miniLabel,GUILayout.ExpandWidth (true));
+		if (GUILayout.Button (buttonLabel,EditorStyles.miniButton,GUILayout.Width (buttonWidth))) {
+			returnValue = true;
+		}
+		GUILayout.EndHorizontal ();
+		GUILayout.EndHorizontal ();
+		return returnValue;
+	}
+	
+	public bool FixLabel (string label, string buttonLabel, int buttonWidth) {
+		
+		
 		bool returnValue = false;
 		GUILayout.BeginHorizontal ();
 		GUILayout.Space (14*EditorGUI.indentLevel);

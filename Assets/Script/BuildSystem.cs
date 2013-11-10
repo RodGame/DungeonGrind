@@ -8,8 +8,11 @@ static class BuildSystem {
 	static GameManager   _GameManager   = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	static PrefabManager _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	static GameObject    _Player        = GameObject.FindGameObjectWithTag("Player");
-	public static GameObject CreatedBuilding;
+	static public GameObject ActiveBuilding;
 	static int _buildState; //0 = No build, 1 = Currently Building, 2 = Built
+	// Structure that contain the position of the start/end of a wall to be created
+	static public List<GameObject> CreatedBuildingList = new List<GameObject>();
+	
 	
 	static public int BuildState
 	{ 
@@ -17,6 +20,7 @@ static class BuildSystem {
 		set {_buildState = value; }
 	}
 	
+	// Evaluate the ressource needed, start the creation of the building and give skill points
 	public static void BuildBuilding (Building _BuildingToBuild) 
 	{	
 		//_BuildingPosition = new Vector3(_PlayerTransform.transform.position.x + 5, _PlayerTransform.transform.position.y, _PlayerTransform.transform.position.z);
@@ -37,28 +41,77 @@ static class BuildSystem {
 		}
 	}
 	
+	// Instantiate the building and initialize it
 	private static void EnterBuildMode(Building _newBuilding)
 	{
 		Transform _PlayerTransform = _Player.transform;
 		Vector3 _BuildingPosition;
-		Quaternion _BuildingOrientation = Quaternion.identity;
-		
+		Quaternion _BuildingRotation = Quaternion.identity;
 		Vector3 _OffsetToAdd;
 		float	_distToBuild = 5.0f;;
-		
+		GameObject CreatedBuilding;
 		
 		_buildState = 1;
 		_GameManager.ChangeState("Build");	
 		
 		_OffsetToAdd      = _PlayerTransform.forward * _distToBuild;
 		_BuildingPosition = _PlayerTransform.position + _OffsetToAdd;
+		_BuildingRotation = _PlayerTransform.rotation * Quaternion.Euler(0, -90, 0);
 		
-		_BuildingOrientation = _PlayerTransform.rotation * Quaternion.Euler(0, -90, 0);
-		CreatedBuilding = GameObject.Instantiate(_newBuilding.BuildingPrefab, _BuildingPosition, _BuildingOrientation) as GameObject;
-		
-		
+		// Instantiate and initialize the new object
+		CreatedBuilding = SpawnBuilding(_newBuilding.Id, _BuildingPosition, _BuildingRotation);
 		CreatedBuilding.transform.parent = _Player.transform;
+		UpdateBuildingInfo(CreatedBuilding, CreatedBuildingList.Count, _newBuilding.Id);
+		//Debug.Log ("Created build at " + CreatedBuildingList.Count + " Position");
+		CreatedBuildingList.Add(CreatedBuilding);
+		
+		
+		
+		ActiveBuilding = CreatedBuilding; // Switch the active building to the created building
+		
 		_buildState = 1;
 		
+	}
+	
+	// Function called when the object is dropped
+	public static void UpdateBuildingInfo(GameObject _BuildingToUpdate, int _id, int _buildingId)
+	{
+		if(_BuildingToUpdate.GetComponent<BuildingManager>() != null)
+		{
+			_BuildingToUpdate.GetComponent<BuildingManager>().Id = _id;
+			_BuildingToUpdate.GetComponent<BuildingManager>().buildingId = _buildingId;
+			
+		}
+		else
+		{
+			Debug.LogWarning("Wrong Gameobject was updated");	
+		}
+	}
+	
+	// Function used when reentering the Camp scene to recreate all objects.
+	public static void SpawnAllBuilding()
+	{
+		//List<GameObject> CreatedBuildingList = new List<GameObject>();
+		SaveLoadSystem.LoadBuildings();
+		//Debug.Log ("To Create " + SaveLoadSystem.LoadedBuildingInfo.Count + " Buildings");
+		for(int i = 0; i < SaveLoadSystem.LoadedBuildingInfo.Count; i++)
+		{
+			GameObject _SpawnedBuilding = SpawnBuilding(SaveLoadSystem.LoadedBuildingInfo[i].buildingId, SaveLoadSystem.LoadedBuildingInfo[i].Position, SaveLoadSystem.LoadedBuildingInfo[i].Rotation) as GameObject;
+			UpdateBuildingInfo(_SpawnedBuilding, SaveLoadSystem.LoadedBuildingInfo[i].id, SaveLoadSystem.LoadedBuildingInfo[i].buildingId);
+			CreatedBuildingList.Add (_SpawnedBuilding);
+		}
+		//Debug.Log ("Created " + CreatedBuildingList.Count + " Buildings");
+	}
+	
+	// Instantiate a building and a a BuildingManager component
+	public static GameObject SpawnBuilding(int _id, Vector3 _Position, Quaternion _Rotation)
+	{
+		GameObject _NewBuilding = GameObject.Instantiate(Inventory.BuildingList[_id].BuildingPrefab, _Position, _Rotation) as GameObject;
+		_NewBuilding.AddComponent<BuildingManager>();
+		_NewBuilding.AddComponent<Rigidbody>();
+		_NewBuilding.GetComponent<Rigidbody>().useGravity = false;
+		_NewBuilding.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+			
+		return _NewBuilding;
 	}
 }

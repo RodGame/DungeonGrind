@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;              // For Enum
 
 public class MonsterProfile : MonoBehaviour {
 	
@@ -14,11 +15,7 @@ public class MonsterProfile : MonoBehaviour {
 	private float _attackRange;
 	private float _sightRange;
 	private float _skillReward;
-	
-	// Use this for initialization
-	void Start () {
-		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
-	}
+	private float _moveSpeed;
 	
 	public int CurHp
 	{
@@ -62,17 +59,52 @@ public class MonsterProfile : MonoBehaviour {
 		set {_skillReward = value; }
 	}
 	
-	public void IniMonsterType(Monster _MonsterInitialized)
+	public float MoveSpeed
+	{
+		get {return _moveSpeed; }
+		set {_moveSpeed = value; }
+	}
+	
+	public Monster CurMonster
+	{
+		get {return _CurMonster; }
+		set {_CurMonster = value; }
+	}
+	
+	// Use this for initialization
+	void Start () {
+		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
+		
+		
+		//MonsterName _MonsterIndex = (MonsterName) Enum.Parse(typeof(MonsterName), transform.name);
+		//IniMonsterType(Bestiary.MonsterList[(int)_MonsterIndex]);
+	}
+	
+	public void IniMonsterType(Monster _MonsterInitialized, bool _isHardcore)
 	{
 		_CurMonster = _MonsterInitialized;
 		
-		_maxHp       = _CurMonster.Hp; // Initialize HP
+		float _ratioMaxHp  = 1.0f;
+		float _ratioDamage = 1.0f;
+		float _ratioSpeed  = 1.0f;
+		float _ratioReward  = 1.0f;
+		
+		if(_isHardcore)
+		{
+			_ratioMaxHp  = 6.0f;
+			_ratioDamage = 10.0f;
+			_ratioSpeed  = 1.5f;
+			_ratioReward = 1.5f;
+		}
+	
+		_maxHp       = Mathf.RoundToInt(_CurMonster.Hp*_ratioMaxHp); // Initialize HP
 		_curHp       = _maxHp;
-		_damage      = _CurMonster.Damage;
+		_damage      = Mathf.RoundToInt(_CurMonster.Damage*_ratioDamage);
 		_attackCd    = _CurMonster.AttackCd;
 		_attackRange = _CurMonster.AttackRange;
 		_sightRange  = _CurMonster.SightRange;
-		_skillReward = _CurMonster.SkillReward;
+		_skillReward = Mathf.RoundToInt(_CurMonster.SkillReward*_ratioReward);
+		_moveSpeed   = _CurMonster.MoveSpeed*_ratioSpeed;
 	}
 	
 	public void AdjustHp(int _hpToAdd)
@@ -81,9 +113,9 @@ public class MonsterProfile : MonoBehaviour {
 		_curHp += _hpToAdd;
 		
 		_GameManager.AddChatLogHUD(_CurMonster.Name + " HP : " + hpBeforeUpdate + "->" + _curHp); 
-		if(_curHp > _CurMonster.Hp)
+		if(_curHp > _maxHp)
 		{
-			_curHp = _CurMonster.Hp;
+			_curHp = _maxHp;
 		}
 		else if(_curHp <= 0)
 		{
@@ -97,97 +129,15 @@ public class MonsterProfile : MonoBehaviour {
 	{
 		AdjustHp(-_damageTaken);
 		GetComponent<MonsterHealthbar>().IsHealthbarEnabled = true;
-		animation.Play("damage");
+		animation.Play(_CurMonster.AnimKnkcName);
 	}
 	
 	void KillMonster()
 	{
 		Destroy (gameObject);
 		_GameManager.ClaimReward(_CurMonster.Loot);
+		_CurMonster.NbrKilled++;
 	}
-	
-	/*void EvaluateState(int _state)
-	{
-		Vector3 _PlayerPos = _PlayerTransform.position;
-		Vector3 _PlayerPosAtGround = new Vector3(_PlayerPos.x, Utility.FindTerrainHeight(_PlayerPos.x,_PlayerPos.z), _PlayerPos.z);
-		
-		timeToMonsterAttack -= Time.deltaTime;
-		if(_state == 3)
-		{
-			rotateTo(_PlayerPosAtGround);
-			
-			if((timeToMonsterAttack <= 0.0f) && _distancePlayer <= _CurMonster.AttackRange)
-			{
-				timeToMonsterAttack = _CurMonster.AttackCd;
-				AttackPlayer();
-			}
-			else
-			{
-					transform.animation.PlayQueued ("iddle");
-			}
-		}
-		else if(_state == 2)
-		{
-			rotateTo(_PlayerPosAtGround);
-			moveForward(_PlayerTransform.position, _CurMonster.MoveSpeed);
-			transform.animation.CrossFade("walk");
-		}
-		else if(_state == 1)
-		{
-			rotateTo(_PlayerPosAtGround);
-			transform.animation.CrossFade("awareness");
-		}
-		else
-		{
-			if(isMovingToTarget == false)
-			{
-				_idlingTarget = Utility.FindRandomPosition(transform.position,-8,8,-8,8);
-				isMovingToTarget = true;
-			}
-			else
-			{
-				if(Vector3.Distance(transform.position, _idlingTarget) < 1.0f)
-				{
-					isMovingToTarget = false;		
-				}
-				else
-				{
-					rotateTo(_idlingTarget);
-					moveForward(_idlingTarget, _CurMonster.MoveSpeed);
-					
-					transform.animation.CrossFade("walk");
-				}
-			}
-			//rotateTo(idlingTarget);
-			
-		}
-	}*/
-
-	
-	
-	/*void rotateTo(Vector3 _positionToTarget)
-	{
-		float rotaSpeed = 5.0f;
-		Vector3 _modifedTarget = new Vector3(_positionToTarget.x, Utility.FindTerrainHeight(transform.position.x,transform.position.z), _positionToTarget.z);
-		
-		Quaternion _quatFrom = transform.rotation;
-		Quaternion _quatTo = Quaternion.LookRotation (_positionToTarget - transform.position);
-		
-		transform.rotation = Quaternion.Slerp(_quatFrom, _quatTo, rotaSpeed*Time.deltaTime);
-		
-		
-		///// WORKING VERSION
-		//Quaternion _quatFrom = transform.rotation;
-		//Quaternion _quatTo = Quaternion.LookRotation (_positionToTarget - transform.position);
-		//transform.rotation = Quaternion.Slerp(_quatFrom, _quatTo, rotaSpeed*Time.deltaTime);
-	}
-	
-	void moveForward(Vector3 _positionToTarget, float _moveSpeed)
-	{
-		transform.position += transform.forward*_moveSpeed * Time.deltaTime;
-	}*/
-
-	
 }
 
 

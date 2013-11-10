@@ -11,10 +11,14 @@ public class TextureManager : MonoBehaviour {
         return m_Instance;
     }
     // class  //TODO: Change Texture to Icon
-    public Texture Texture_RockPickaxe;
+    public Texture Texture_RockHammer;
+	public Texture Texture_RockPickaxe;
 	public Texture Texture_RockAxe;
 	public Texture Texture_RockSword;
-	public Texture Texture_RockHammer;
+	public Texture Texture_RockSpear;
+	public Texture Texture_ProgBackground;
+	public Texture Texture_ProgHealtBar;
+	
 	
 	public Texture Icon_Spell_IceBolt;
 	public Texture Icon_Spell_FireBat;

@@ -3,6 +3,7 @@ using System.Collections;
 
 public class Item {
 	
+	private int     _idItem;
 	private string  _name;
 	private bool    _isCraftable;
 	private bool    _isUnlocked;
@@ -10,8 +11,15 @@ public class Item {
 	private int     _maxStack = 1;
 	private int     _nbrCrafted = 0;
 	private Texture _ItemIcon;
+	private float    _curExp = 0.0f;
+	private int      _level  = 0;
 	private GameObject _ItemPrefab = null;
 	
+	public int IdItem
+	{
+		get {return _idItem; }
+		set {_idItem = value; }
+	}
 	
 	public string Name
 	{
@@ -55,6 +63,18 @@ public class Item {
 		set {_ItemIcon = value; }
 	}
 	
+	public float CurExp
+	{
+		get {return _curExp; }
+		set {_curExp = value; }
+	}
+	
+	public int Level
+	{
+		get {return _level; }
+		set {_level = value; }
+	}
+	
 	public GameObject ItemPrefab
 	{
 		get {return _ItemPrefab; }
@@ -63,11 +83,9 @@ public class Item {
 }
 
 // Enumeration of all Compound
-public enum ItemName {
-	None,
-	Hammer,
-	RockSword,
-	RockAxe,
-	RockPickaxe,
-	RockSpear
+public enum ItemType {
+	Weapon,
+	Armor,
+	Consumable,
+	QuestItem
 }

@@ -13,24 +13,23 @@ public class GameManager : MonoBehaviour {
 	private GameObject _CurObjectInteracted;
 	
 	private float _curProgress = 0;
-	private int _curProgressSpeed = 120;
 	private string _curAction = "None";
 	private string _curZone   = "Camp";
 	private string _curState; //Menu, Play, Talk
-	private int    _distanceInteraction = 6;
 	private int    _discussionStep = 0;
-	private int    _dungeonLevelToSpawn = 0;
-	
+	private PlayerHUD.DungeonParameters _CurDungeonParameters;
 	private List<string> _discussionListString = new List<string>();
-	
+	private Quaternion _originalRotation;
 	private int _maxDungeonLevel = 1;
+	
+	public GameObject NewCart; // TODO: Remove this. It shouldnt be there.
 	
 	public string CurState
 	{
 		get {return _curState; }
 	}
 	
-	public GameObject NewCart;
+	
 	
 	public float CurProgress
 	{
@@ -56,10 +55,10 @@ public class GameManager : MonoBehaviour {
 		set {_maxDungeonLevel = value; }
 	}
 	
-	public int DungeonLevelToSpawn
+	public PlayerHUD.DungeonParameters CurDungeonParameters
 	{
-		get {return _dungeonLevelToSpawn; }
-		set {_dungeonLevelToSpawn = value; }
+		get {return _CurDungeonParameters; }
+		set {CurDungeonParameters = value; }
 	}
 	
 	void Awake ()
@@ -67,23 +66,26 @@ public class GameManager : MonoBehaviour {
 		Character.IniCharacter();
 		Bestiary.IniBestiary();
 		Inventory.IniInventory();
+		ItemInventory.IniItemInventory();
 		
 		_Player       = GameObject.FindGameObjectWithTag("Player");
 		_PlayerCam    = GameObject.FindGameObjectWithTag("MainCamera").camera;
 		_PlayerMaster = GameObject.FindGameObjectWithTag("PlayerMaster");
 		_PlayerHUD    = _PlayerMaster.GetComponent<PlayerHUD>();
-		
+		DungeonLevelPool.IniDungeonLevelPool();
 	}
+	
 	// Use this for initialization
 	public void IniGame () 
 	{
-		
 		SaveLoadSystem.Load();
 		Character.SetActiveTask(Character.TaskList[(int)TaskName.Spartan0]);
 		
 		SkipTutorial();
 		Camera.mainCamera.GetComponent<Skybox>().material = GetComponent<TextureManager>().Material_Skybox_Camp;
 		ChangeState("Play");
+		Character.RefillHP ();
+		Character.RefillMP ();
 	}
 	
 	// Update is called once per frame
@@ -118,22 +120,7 @@ public class GameManager : MonoBehaviour {
 		
 		if(BuildSystem.BuildState != 0)
 		{
-			float rotaSpeed = 2.0f;
-			if(Input.GetKey(KeyCode.Q))
-			{
-				BuildSystem.CreatedBuilding.transform.RotateAroundLocal(new Vector3(0.0f,1.0f,0.0f), rotaSpeed*Time.deltaTime);
-			}
-			else if(Input.GetKey(KeyCode.E))
-			{
-				BuildSystem.CreatedBuilding.transform.RotateAroundLocal(new Vector3(0.0f,1.0f,0.0f), -rotaSpeed*Time.deltaTime);
-			} 
-			
-			if(Input.GetMouseButtonDown(0))
-			{
-				BuildSystem.CreatedBuilding.transform.parent = null;
-				BuildSystem.BuildState = 0;
-				_curState = "Play";
-			}
+			BuildSystem.ActiveBuilding.GetComponent<BuildingManager>().ControlBuilding();
 		}
 		
 		//Regenerate Mana for character
@@ -145,11 +132,18 @@ public class GameManager : MonoBehaviour {
 	
 	void UpdateBar() {
 		
-		if(_curAction != "Fighting" && _curAction != "Default")
+		float _progressSpeed = 100.0f;
+		
+		if(_curAction != "Fighting" && _curAction != "Default" && _curAction != "Woodcutting" && _curAction != "Mining")
 		{
-			if(Vector3.Distance(_CurObjectInteracted.transform.position, _Player.transform.position) < _distanceInteraction)
+			if(ItemInventory.EquippedWeapon != null)
 			{
-				_curProgress = _curProgress + (_curProgressSpeed*Time.deltaTime);
+				_progressSpeed = ItemInventory.EquippedWeapon.Speed;
+			}
+			
+			if(Vector3.Distance(_CurObjectInteracted.transform.position, _Player.transform.position) < ItemInventory.EquippedWeapon.Range)
+			{
+				_curProgress = _curProgress + (_progressSpeed*Time.deltaTime);
 				if(_curProgress >= 100)
 				{
 					_curProgress =  _curProgress - 100;
@@ -167,8 +161,16 @@ public class GameManager : MonoBehaviour {
 		}
 		else
 		{
-			_curProgress = _curProgress + (_curProgressSpeed*Time.deltaTime);
-			RotateEquippedItem();
+			if(ItemInventory.EquippedWeapon != null)
+			{
+				_progressSpeed = ItemInventory.EquippedWeapon.Speed;
+			}
+			
+			_curProgress = _curProgress + (_progressSpeed*Time.deltaTime);
+			if(ItemInventory.EquippedWeapon != null)
+			{
+				RotateEquippedWeapon();
+			}
 			
 			
 			if(_curProgress >= 100)
@@ -181,20 +183,15 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
-	private void RotateEquippedItem()
+	private void RotateEquippedWeapon()
 	{
 		GameObject _GO_EquippedItem = GameObject.FindGameObjectWithTag("EquippedItem");
-		Quaternion _originalRotation = Quaternion.identity;
+		
 		if(_GO_EquippedItem != null)
 		{
-			if(_curProgress == 0)
-			{
-				_originalRotation = _GO_EquippedItem.transform.rotation;	
-			}
-			
 			if(_curProgress >= 100)
 			{
-				_GO_EquippedItem.transform.rotation = _originalRotation;
+				_GO_EquippedItem.transform.localRotation = Quaternion.AngleAxis(90.0f, new Vector3(0.0f, 1.0f, 0.0f));
 			}
 			else
 			{
@@ -239,7 +236,7 @@ public class GameManager : MonoBehaviour {
 		}
 		//Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table
 		
-		ItemInventory.EquipItem (Inventory.ItemList[(int)ItemName.RockSword]);
+		
 	}
 	
 	void TestForTaskCompletion()
@@ -285,7 +282,7 @@ public class GameManager : MonoBehaviour {
 				
 				switch(_curType)
 				{
-					case "[ULTA	]":
+					case "[ULTA]":
 						
 						for(int j = 0; j <  _RewardToGive.Count; j++)
 						{
@@ -316,14 +313,14 @@ public class GameManager : MonoBehaviour {
 						_RewardToGive = Utility.parseString(_curReward);
 						for(int j = 0; j <  _RewardToGive.Count; j++)
 						{
-							ItemName ItemIndex = (ItemName) Enum.Parse(typeof(ItemName), _RewardToGive[j].type);  
+							WeaponName WeaponIndex = (WeaponName) Enum.Parse(typeof(WeaponName), _RewardToGive[j].type);  
 							for(int k = 0; k < _RewardToGive[j].nbr; k++)
 							{
-								//Debug.Log ("Gave 1 : " + Inventory.ItemList[(int)ItemIndex].Name );
-								ItemInventory.AddItem(Inventory.ItemList[(int)ItemIndex]);
+								//Debug.Log ("Gave 1 : " + Inventory.WeaponList[(int)WeaponIndex].Name );
+								ItemInventory.AddItem(Inventory.WeaponList[(int)WeaponIndex]);
 							}
 						
-							//Inventory.ItemList[(int)ItemIndex].CurValue += Convert.ToInt16(_RewardToGive[j].nbr);
+							//Inventory.WeaponList[(int)WeaponIndex].CurValue += Convert.ToInt16(_RewardToGive[j].nbr);
 						}
 						break;
 				}
@@ -341,9 +338,9 @@ public class GameManager : MonoBehaviour {
 			{	
 				_curZone = "Camp";
 			}
-			else if((_Player.transform.position.x > -48 && _Player.transform.position.x < -40) && (_Player.transform.position.z > -11 && _Player.transform.position.z < -5))
+			else if((_Player.transform.position.x > -49 && _Player.transform.position.x < -40) && (_Player.transform.position.z > -11 && _Player.transform.position.z < -5))
 			{
-				EnterDungeon();
+				OpenDungeonMenu();
 				_curZone = "Dungeon Warp";
 			}
 			else
@@ -363,12 +360,20 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
-	public void EnterDungeon()
+	public void OpenDungeonMenu()
 	{
 		if(_curState == "Play")
 		{
 			_PlayerHUD.ChangeBoxView ("DungeonMenu");
 		}
+	}
+	
+	public void StartDungeon(PlayerHUD.DungeonParameters _DungeonParametersSelected)
+	{
+		_CurDungeonParameters = _DungeonParametersSelected;
+		SaveLoadSystem.Save();
+		BuildSystem.CreatedBuildingList = new List<GameObject>();
+		Application.LoadLevel("Dungeon");
 	}
 	
 	public void ChangeDungeonState(string _newState)
@@ -415,6 +420,7 @@ public class GameManager : MonoBehaviour {
 			_curState = "Menu";
 			_Player.GetComponent<CharacterController>().enabled = true;
 			Screen.lockCursor = false;
+			_PlayerHUD.isDisplayCursor = false;
 			_Player.GetComponent<MouseLook>().enabled = false;
 			_PlayerCam.GetComponent<MouseLook>().enabled = false;	
 		}	
@@ -423,6 +429,7 @@ public class GameManager : MonoBehaviour {
 			_Player.GetComponent<CharacterController>().enabled = true;
 			_curState = "Play";
 			Screen.lockCursor = true;
+			_PlayerHUD.isDisplayCursor = true;
 			_Player.GetComponent<MouseLook>().enabled = true;
 			_PlayerCam.GetComponent<MouseLook>().enabled = true;
 		}
@@ -430,6 +437,7 @@ public class GameManager : MonoBehaviour {
 		{
 			_curState = "Talk";
 			Screen.lockCursor = true;
+			_PlayerHUD.isDisplayCursor = false;
 			_Player.GetComponent<CharacterController>().enabled = false;
 		}
 		else if(_newState == "Build")
@@ -460,16 +468,22 @@ public class GameManager : MonoBehaviour {
 		{
 			if(_collidedObj != null)
 			{
+				float _distanceInteraction = 5.0f;
+				if(ItemInventory.EquippedWeapon != null)
+				{
+					_distanceInteraction = ItemInventory.EquippedWeapon.Range;
+				}
+				
 				if(Vector3.Distance(_collidedObj.transform.position, _Player.transform.position) <= _distanceInteraction)
 				{
 					_CurObjectInteracted = _collidedObj.gameObject;
 					switch(_collidedObj.tag)
 					{
 						case "Tree":
-							DoAction("Woodcutting");
+								DoAction("Woodcutting");
 							break;
 						case "Rock":
-							DoAction("Mining");
+								DoAction("Mining");
 							break;
 						case "Monster":
 							DoAction("Fighting");
@@ -487,7 +501,7 @@ public class GameManager : MonoBehaviour {
 									_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[MISC] The door won't open. Maybe spartan know something about this.");	
 									break;
 								case "Cart03":	
-									if(ItemInventory.EquippedItem == Inventory.ItemList[(int)ItemName.Hammer])
+									if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer])
 									{
 										DoUniqueAction("RepairCart");
 									}
@@ -515,6 +529,11 @@ public class GameManager : MonoBehaviour {
 	
 	public void RaycastAnalyzeAtMouse(Collider _collidedObj)
 	{
+		float _distanceInteraction = 5.0f;
+		if(ItemInventory.EquippedWeapon != null)
+		{
+			_distanceInteraction = ItemInventory.EquippedWeapon.Range;
+		}
 		
 		if(_collidedObj != null)
 		{
@@ -577,8 +596,11 @@ public class GameManager : MonoBehaviour {
 					}
 					break;
 				case "Default": 
-					_curAction = _newAction;
-					_Player.GetComponent<PlayerSound>().PlaySound("SwordSwing");
+					if(ItemInventory.EquippedWeapon != null)
+					{
+						_curAction = _newAction;
+						_Player.GetComponent<PlayerSound>().PlaySound("SwordSwing");
+					}
 					break;
 				default:
 					Debug.LogWarning ("No Item in GameManager");
@@ -589,10 +611,40 @@ public class GameManager : MonoBehaviour {
 	
 	public void AttackTarget()
 	{
-		_CurObjectInteracted.transform.parent.GetComponent<MonsterProfile>().DamageMonster(Character.CurDamage);
-		Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Fighter],10.0f/Character.SkillList[(int)SkillName.Fighter].Level);
-		//_Player.GetComponent<PlayerSound>().PlaySound("SwordHit");
+		int _damageDealt = calculateDamage();
 		
+		// Look if there is a MonsterProfile on the target. Otherwise take it's parent
+		if(_CurObjectInteracted.GetComponent<MonsterProfile>() != null)
+		{
+			_CurObjectInteracted.GetComponent<MonsterProfile>().DamageMonster(_damageDealt);
+		}
+		else
+		{
+			_CurObjectInteracted.transform.parent.GetComponent<MonsterProfile>().DamageMonster(_damageDealt);
+		}
+		
+		Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Fighter],_damageDealt/Mathf.Pow (Character.SkillList[(int)SkillName.Fighter].Level,1.4f));
+		if(ItemInventory.EquippedWeapon != null)
+		{
+			ItemInventory.EquippedWeapon.GiveExp(_damageDealt/Mathf.Pow (ItemInventory.EquippedWeapon.Level, 1.4f));
+		}
+	}
+	
+	public int calculateDamage()
+	{
+		int _damageDealt;
+		int _damageFromWeapon;
+		if(ItemInventory.EquippedWeapon == null)
+		{
+			_damageFromWeapon = 0;
+		}
+		else
+		{
+			_damageFromWeapon = ItemInventory.EquippedWeapon.Damage;
+		}
+		
+		_damageDealt = Character.CurDamage + _damageFromWeapon;
+		return _damageDealt;
 	}
 	
 	public void DoUniqueAction(string _actionToDo)
@@ -622,9 +674,9 @@ public class GameManager : MonoBehaviour {
 		_PlayerHUD.EnableButtonInHUD(_buttonPos);
 	}
 	
-	public void AddItemToInventory(Item _ItemToAdd)
+	public void AddItemToInventory(Weapon _WeaponToAdd)
 	{
-		ItemInventory.AddItem(_ItemToAdd);
+		ItemInventory.AddItem(_WeaponToAdd);
 	}
 	
 	public void AddChatLogHUD(string _stringToAddChatLog)
@@ -634,9 +686,21 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
-	public void StartDungeon(int _dungeonLevel)
+	public void UpgradeDungeon(DungeonUpgrade _UpgradeToEnable)
 	{
-		_dungeonLevelToSpawn = _dungeonLevel;
-		Application.LoadLevel("Dungeon");	
+		if(Inventory.RessourceList[(int)RessourceName.Coin].CurValue >= _UpgradeToEnable.CostCoin && Character.InfluencePoints >= _UpgradeToEnable.CostInfluence)
+		{
+			Inventory.RessourceList[(int)RessourceName.Coin].CurValue -= _UpgradeToEnable.CostCoin;
+			Character.InfluencePoints -= _UpgradeToEnable.CostInfluence;
+			_UpgradeToEnable.IsEnabled = true;
+		}
+		
+		if(_UpgradeToEnable.Name == "First Upgrade")
+		{
+			DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.HardcoreMode].IsUnlocked = true;	
+			DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.SkeletonCrypt].IsUnlocked = true;	
+		}
 	}
+	
+	
 }

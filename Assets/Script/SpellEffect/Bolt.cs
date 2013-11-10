@@ -25,7 +25,15 @@ public class Bolt : MonoBehaviour {
 		{
 			
 			int spellDamage = Character.SpellList[(int)SpellName.IceBolt].Damage;
-			MonsterProfile _MonsterProfile = _Collision.collider.gameObject.transform.parent.GetComponent<MonsterProfile>();
+			MonsterProfile _MonsterProfile;
+			if(_Collision.collider.gameObject.GetComponent<MonsterProfile>() != null)
+			{
+					_MonsterProfile = _Collision.collider.gameObject.GetComponent<MonsterProfile>();
+			}
+			else
+			{
+					_MonsterProfile = _Collision.collider.gameObject.transform.parent.GetComponent<MonsterProfile>();
+			}
 			
 			// Damage Monster
 			_MonsterProfile.DamageMonster(spellDamage);

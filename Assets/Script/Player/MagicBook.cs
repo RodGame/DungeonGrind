@@ -104,14 +104,13 @@ static class MagicBook {
 	
 	static public void RewardSpell(Spell _SpellProc, float _Reward)
 	{
-		Debug.Log (_Reward);
 		if(_SpellProc.Category == "Ice")
 		{
-			Character.GiveExpToSkill(Character.SkillList[(int)SkillName.IceMage],_Reward/Mathf.Pow (Character.SkillList[(int)SkillName.IceMage].Level,2));
+			Character.GiveExpToSkill(Character.SkillList[(int)SkillName.IceMage],_Reward/Mathf.Pow (Character.SkillList[(int)SkillName.IceMage].Level,1.50f));
 		}
 		else if(_SpellProc.Category == "Fire")
 		{
-			Character.GiveExpToSkill(Character.SkillList[(int)SkillName.FireMage],_Reward/Mathf.Pow (Character.SkillList[(int)SkillName.FireMage].Level,2));
+			Character.GiveExpToSkill(Character.SkillList[(int)SkillName.FireMage],_Reward/Mathf.Pow (Character.SkillList[(int)SkillName.FireMage].Level,1.50f));
 		}
 		
 		switch(_compToLevelOnSpell)

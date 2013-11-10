@@ -14,17 +14,17 @@ public class Spell {
 	private float  _cd             = 1.0f;
 	private float  _cdBase         = 1;
 	private float  _cdPerLevel     = 0;
-	private int    _cdLevel        = 1;
+	private int    _cdLevel        = 0;
 	private float  _cdCurExp       = 0;
 	private float  _range          = 5.0f;
 	private float  _rangeBase      = 1;
 	private float  _rangePerLevel  = 0;
-	private int    _rangeLevel     = 1;
+	private int    _rangeLevel     = 0;
 	private float  _rangeCurExp    = 0;
 	private int    _mana           = 5;
 	private int  _manaBase         = 1;
 	private float  _manaPerLevel   = 0;
-	private int    _manaLevel      = 1;
+	private int    _manaLevel      = 0;
 	private float  _manaCurExp     = 0;
 	
 	private Texture _SpellIcon;

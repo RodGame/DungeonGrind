@@ -411,7 +411,55 @@ public class Seeker : MonoBehaviour {
 	 * 
 	 * \a callback will be called when the path has completed.
 	 * \a Callback will not be called if the path is canceled (e.g when a new path is requested before the previous one has completed) */
-	public Path StartPath (Path p, OnPathDelegate callback = null, int graphMask = -1) {
+	
+	public Path StartPath (Path p, OnPathDelegate callback) {
+		int graphMask = -1;
+		p.enabledTags = traversableTags.tagsChange;
+		p.tagPenalties = tagPenalties;
+		
+		//Cancel a previously requested path is it has not been processed yet and also make sure that it has not been recycled and used somewhere else
+		if (path != null && path.GetState() <= PathState.Processing && lastPathID == path.pathID) {
+			path.LogError ("Canceled path because a new one was requested\nGameObject: "+gameObject.name);
+			//No callback should be sent for the canceled path
+		}
+		
+		path = p;
+		path.callback += onPathDelegate;
+		
+		tmpPathCallback = callback;
+		
+		//Set the Get Nearest Node hints if they have not already been set
+		/*if (path.startHint == null)
+			path.startHint = startHint;
+			
+		if (path.endHint == null) 
+			path.endHint = endHint;
+		*/
+		
+		//Save the path id so we can make sure that if we cancel a path (see above) it should not have been recycled yet.
+		lastPathID = path.pathID;
+		
+		//Delay the path call by one frame if it was sent the same frame as the previous call
+		/*if (lastPathCall == Time.frameCount) {
+			StartCoroutine (DelayPathStart (path));
+			return path;
+		}*/
+		
+		//lastPathCall = Time.frameCount;
+		
+		//Pre process the path
+		RunModifiers (ModifierPass.PreProcess, path);
+		
+		//Send the request to the pathfinder
+		AstarPath.StartPath (path);
+		
+		return path;
+	}
+	
+	
+	// public Path StartPath (Path p, OnPathDelegate callback = null, int graphMask = -1) 
+	
+	public Path StartPath (Path p, OnPathDelegate callback, int graphMask) {
 		p.enabledTags = traversableTags.tagsChange;
 		p.tagPenalties = tagPenalties;
 		

@@ -11,7 +11,7 @@ public class PlayerHUD : MonoBehaviour {
 	private GameObject  _Player;
 	private Camera      _PlayerCam;
 	private GameObject  _PlayerMaster;
-	private Item        _ItemClicked;
+	private Weapon        _ItemClicked;
 	private Vector2     _MousePosOnClick;
 	private int 		_inventorySlotClicked;
 	private TextureManager _TextureManager;
@@ -29,10 +29,10 @@ public class PlayerHUD : MonoBehaviour {
 	private bool _isDisplayFloatingMenu = false;
 	private bool _isInteractiveDetected = false;
 	private bool _isDiscussionActive    = false;
-	private bool _isDamageLeveling = true;
-	private bool _isCdLeveling     = false;
-	private bool _isRangeLeveling  = false;
-	private bool _isManaLeveling   = false;
+	private bool _isDamageLeveling  = true;
+	private bool _isCdLeveling      = false;
+	private bool _isRangeLeveling   = false;
+	private bool _isManaLeveling    = false;
 	private string _lastCompLeveled = "Damage";
 	private float timeElapsedFloatingMenu = 0.0f;
 	private float timeToDeletFloatingMenu = 4.0f;
@@ -42,6 +42,7 @@ public class PlayerHUD : MonoBehaviour {
 	private	float invSlot_sizeY;
 	private float invSlot_offset = 10;
 	private bool[] _buttonToggle = new bool[7] {false, false, false, false, false, true, false};
+	private int[,] _mapToDisplay;
 	
 	
 	private string objectRaycastCollided;
@@ -57,7 +58,17 @@ public class PlayerHUD : MonoBehaviour {
 	public Texture textureProgBackground;
 	public Texture WhiteTexture;
 	
+	public DungeonParameters DungeonToGenerate;
 	
+	public struct DungeonParameters
+	{
+        public int  level;
+     	public bool isHardcore;
+		public bool isWave;
+	};
+	
+	private bool _wasHardcore = false;
+	private bool _wasWave     = false;
 	
 	// Use this for initialization
 	void Start () {
@@ -71,7 +82,51 @@ public class PlayerHUD : MonoBehaviour {
 			
 		invSlot_sizeX  = _boxSizeX/15;
 		invSlot_sizeY  = _boxSizeX/15;
+	
+		DungeonToGenerate.level = 1;
+		DungeonToGenerate.isHardcore    = false;
+		DungeonToGenerate.isWave        = false;
+	}
+	
+	void Update()
+	{
+		if(Application.loadedLevelName == "Dungeon")
+		{
+			UpdateKnownMap();	
+		}
 		
+	}
+	
+	void UpdateKnownMap()
+	{
+		// Update Known Map 
+		int _playerSightRange = 4;
+		
+		int playerPosX = Mathf.RoundToInt(_Player.transform.position.x);
+		int playerPosZ = Mathf.RoundToInt(_Player.transform.position.z);
+		
+		DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();
+		
+		for(int i = playerPosX - _playerSightRange; i < playerPosX + _playerSightRange; i++)
+		{
+			for(int j = playerPosZ - _playerSightRange; j < playerPosZ + _playerSightRange; j++)
+			{
+				if(i > 0 && i < _DungeonManager.MapSizeX - 1 && j > 0 && j < _DungeonManager.MapSizeZ - 1) // Make sure that the index are within the size of the map
+				{
+					if(_mapToDisplay[i,j] == 1)
+					{
+						_mapToDisplay[i,j] = 2;	
+					}
+				}
+			}
+		}	
+	}
+	
+	public void InitializeMap(int[,] _dungeonMap, int _mapSizeX, int _mapSizeZ)
+	{
+		//DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();	
+		_mapToDisplay = new int[_mapSizeX,_mapSizeZ];
+		Array.Copy (_dungeonMap, _mapToDisplay, _mapSizeX * _mapSizeZ);
 	}
 	
 	void OnGUI()
@@ -100,7 +155,7 @@ public class PlayerHUD : MonoBehaviour {
 		}
 		DisplayFloatingBox();
 		DisplayChatLog();
-		DisplayEquippedItem();
+		DisplayEquippedWeapon();
 		DisplayActiveSpell();
 		//DisplayHP();
 		DisplayActiveTask();
@@ -185,22 +240,23 @@ public class PlayerHUD : MonoBehaviour {
 		_isDiscussionActive = false;
 	}
 	
-	private void DisplayEquippedItem()
+	private void DisplayEquippedWeapon()
 	{
-		if(ItemInventory.EquippedItem == null)
+		if(ItemInventory.EquippedWeapon == null)
 		{
 			GUI.Button(new Rect(_POSX + _progBarLength + 25, 0.5f*_LINE_HEIGHT                     , invSlot_sizeX*1.5f, invSlot_sizeY*1.5f),"");
 			GUI.Label (new Rect(_POSX + _progBarLength + 23, 0.5f*_LINE_HEIGHT + invSlot_sizeY*1.5f, invSlot_sizeX*2.0f, _LINE_HEIGHT      ),"No Item");
 		}
 		else 
 		{
-			   GUI.Label (new Rect(_POSX + _progBarLength + 20, 0.5f*_LINE_HEIGHT + invSlot_sizeY*1.5f, invSlot_sizeX*2.0f, _LINE_HEIGHT      ),ItemInventory.EquippedItem.Name);
-			if(GUI.Button(new Rect(_POSX + _progBarLength + 25, 0.5f*_LINE_HEIGHT , invSlot_sizeX*1.5f, invSlot_sizeY*1.5f),ItemInventory.EquippedItem.ItemIcon))
+			   GUI.Label (new Rect(_POSX + _progBarLength + 20, 0.5f*_LINE_HEIGHT + invSlot_sizeY*1.5f, invSlot_sizeX*2.0f, _LINE_HEIGHT      ),ItemInventory.EquippedWeapon.Name);
+			if(GUI.Button(new Rect(_POSX + _progBarLength + 25, 0.5f*_LINE_HEIGHT , invSlot_sizeX*1.5f, invSlot_sizeY*1.5f), new GUIContent(ItemInventory.EquippedWeapon.ItemIcon, "mouseOverOnEquippedWeapon")))
 			{
-				UnEquipItem();
+				ItemInventory.UnequipWeapon();
 			}
 			
 		}
+		_mouseOver = GUI.tooltip;
 	}
 	
 	private void DisplayActiveSpell()
@@ -215,12 +271,11 @@ public class PlayerHUD : MonoBehaviour {
 			   GUI.Label (new Rect(_POSX + _progBarLength + 23 + invSlot_sizeX*1.5f + 25, 0.5f*_LINE_HEIGHT + invSlot_sizeY*1.5f, invSlot_sizeX*2.0f, _LINE_HEIGHT      ),MagicBook.ActiveSpell.Name);
 			if(GUI.Button(new Rect(_POSX + _progBarLength + 25 + invSlot_sizeX*1.5f + 25, 0.5f*_LINE_HEIGHT                     , invSlot_sizeX*1.5f, invSlot_sizeY*1.5f),MagicBook.ActiveSpell.SpellIcon))
 			{
-				//UnEquipItem();
+				//UnEquipWeapon();
 			}
 			
 		}
 	}
-	
 	
 	private void DisplayHP()
 	{
@@ -248,16 +303,77 @@ public class PlayerHUD : MonoBehaviour {
 		}
 	}
 	
+	private List<string> CreateListInventoryItem(Weapon _WeaponHovered)
+	{
+		List<string> _StringToDisplay = new List<string>();
+		
+		_StringToDisplay.Add (_WeaponHovered.Name);
+		_StringToDisplay.Add ("Level : " + _WeaponHovered.Level);
+		_StringToDisplay.Add ("Exp : " + _WeaponHovered.CurExp);
+		_StringToDisplay.Add ("Damage : " + _WeaponHovered.Damage);
+		_StringToDisplay.Add ("Speed : " + _WeaponHovered.Speed);
+		_StringToDisplay.Add ("Range : " + _WeaponHovered.Range);
+		return _StringToDisplay;
+	}
+	
 	private void DisplayFloatingBox()
 	{
-	// Test if a Process is being hovered
-		for(int i = 0; i < Enum.GetValues(typeof(ItemName)).Length ; i++)
+			
+		// Test if a Weapon is being hovered
+		for(int i = 0; i < Enum.GetValues(typeof(WeaponName)).Length ; i++)
 		{
-			if(_mouseOver == ("mouseOverOnItemToCraft" + Inventory.ItemList[i].Name))
+			if(_mouseOver == ("mouseOverOnItemToCraft_" + Inventory.WeaponList[i].Name))
 			{
-				DisplayFloatingLabels (Utility.parseStringToListString(Inventory.ItemList[i].Recipe) );
+				DisplayFloatingLabels (Utility.parseStringToListString(Inventory.WeaponList[i].Recipe) );
 			}
 		}	
+		
+		// Test if an inventory slot is being hovered
+		for(int i = 0; i < ItemInventory.InventorySize; i++)
+		{
+			if(_mouseOver == ("mouseOverOnInventorySlot_" + i.ToString()))
+			{
+				DisplayFloatingLabels (CreateListInventoryItem(ItemInventory.InventoryList[i].slotWeapon));
+			}
+		}
+		
+		// Test if the equipped weapon is being hovered
+		if(_mouseOver == ("mouseOverOnEquippedWeapon"))
+		{
+			List<string> ListEquippedWeaponToDisplay = CreateListInventoryItem(ItemInventory.EquippedWeapon);
+			Debug.Log (ListEquippedWeaponToDisplay[0]);
+			if(ItemInventory.EquippedWeapon != null)
+			{
+				DisplayFloatingLabels(ListEquippedWeaponToDisplay);
+				Debug.Log ("Should Display");
+			}
+		}
+		
+		// Test if a Building is being hovered
+		for(int i = 0; i < Enum.GetValues(typeof(BuildingName)).Length ; i++)
+		{
+			if(_mouseOver == ("mouseOverOnBuildingToBuild_" + Inventory.BuildingList[i].Name))
+			{ 
+				DisplayFloatingLabels (Utility.parseStringToListString(Inventory.BuildingList[i].Recipe) );
+			}
+		}		
+		
+		// Test if an upgrade is being hovered
+		for(int i = 0; i < Enum.GetValues(typeof(DungeonUpgradeName)).Length ; i++)
+		{
+			if(_mouseOver == ("mouseOverOnDungeonUpgrade" + DungeonLevelPool.DungeonUpgradeList[i].Name))
+			{
+				List<string> UpgradeRessources = new List<string>();
+				
+				UpgradeRessources.Add("Cost : ");
+				UpgradeRessources.Add("Influence : " + Character.InfluencePoints + "/" + DungeonLevelPool.DungeonUpgradeList[i].CostInfluence);
+				UpgradeRessources.Add("Coin      : " + Inventory.RessourceList[(int)RessourceName.Coin].CurValue + "/" + DungeonLevelPool.DungeonUpgradeList[i].CostCoin);
+				UpgradeRessources.Add("Description : ");
+				UpgradeRessources.Add(DungeonLevelPool.DungeonUpgradeList[i].Description);
+				
+				DisplayFloatingLabels (UpgradeRessources);
+			}
+		}
 	}
 	
 	private void DisplayCursor()
@@ -274,7 +390,7 @@ public class PlayerHUD : MonoBehaviour {
 			}
 			else if(objectRaycastCollided == "Cart03")
 			{
-				if(ItemInventory.EquippedItem == Inventory.ItemList[(int)ItemName.Hammer])
+				if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer])
 				{
 					GUI.Label (new Rect(Screen.width/2 - 30,Screen.height*0.52f,125,_LINE_HEIGHT*2),"Repair cart with Hammer");
 				}
@@ -285,7 +401,7 @@ public class PlayerHUD : MonoBehaviour {
 			}
 			else if(objectRaycastCollided == "Monster")
 			{
-				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Attack with " + ItemInventory.EquippedItem.Name);	
+				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Attack with " + ItemInventory.EquippedWeapon.Name);	
 			}
 			else
 			{
@@ -331,7 +447,7 @@ public class PlayerHUD : MonoBehaviour {
 		int nbrLine = 4;
 		
 		if(!_buttonToggle[0]){GUI.enabled = false;}
-		if(GUI.Button(new Rect(_POSX, (_LINE_HEIGHT)*nbrLine++, _buttonX, _LINE_HEIGHT), "F1 Items")) {ChangeBoxView("ItemList");}
+		if(GUI.Button(new Rect(_POSX, (_LINE_HEIGHT)*nbrLine++, _buttonX, _LINE_HEIGHT), "F1 Items")) {ChangeBoxView("Inventory");}
 		GUI.enabled = true;
 		
 		if(!_buttonToggle[1]){GUI.enabled = false;}
@@ -384,7 +500,7 @@ public class PlayerHUD : MonoBehaviour {
 	{
 		switch(_keyPressed)
 		{
-			case "F1": if(_buttonToggle[0] == true){ChangeBoxView ("ItemList");} break;
+			case "F1": if(_buttonToggle[0] == true){ChangeBoxView ("Inventory");} break;
 			case "F2": if(_buttonToggle[2] == true){ChangeBoxView ("StatList") ;} break;
 			case "F3": if(_buttonToggle[3] == true){ChangeBoxView ("SkillList");} break;
 			case "F4": if(_buttonToggle[3] == true){ChangeBoxView ("SpellBook");} break;
@@ -403,13 +519,13 @@ public class PlayerHUD : MonoBehaviour {
 		{
 		
 		case "CraftList":
-			for(int i = 0; i <  Inventory.ItemList.Length; i++)
+			for(int i = 0; i <  Inventory.WeaponList.Length; i++)
 			{
-				if(Inventory.ItemList[i].IsUnlocked == true)
+				if(Inventory.WeaponList[i].IsUnlocked == true)
 				{
-					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.ItemList[i].Name, "mouseOverOnItemToCraft" + Inventory.ItemList[i].Name)))
+					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.WeaponList[i].Name, "mouseOverOnItemToCraft_" + Inventory.WeaponList[i].Name)))
 					{
-						CraftSystem.CraftItem (Inventory.ItemList[i]);
+						CraftSystem.CraftItem (Inventory.WeaponList[i]);
 					}
 				}
 			}
@@ -421,7 +537,7 @@ public class PlayerHUD : MonoBehaviour {
 			{
 				if(Inventory.BuildingList[i].IsUnlocked == true)
 				{
-					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.BuildingList[i].Name, "mouseOverOnItemToBuild" + Inventory.BuildingList[i].Name)))
+					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.BuildingList[i].Name, "mouseOverOnBuildingToBuild_" + Inventory.BuildingList[i].Name)))
 					{
 						BuildSystem.BuildBuilding (Inventory.BuildingList[i]);
 					}
@@ -432,14 +548,22 @@ public class PlayerHUD : MonoBehaviour {
 			
 		case "StatList":
 			int _totalSkillLvl = Character.CalculateSkillLevel();
-			Debug.Log (_totalSkillLvl);
 			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 1*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Total skill level : " + _totalSkillLvl);
 			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 2*_LINE_HEIGHT     , 300, _LINE_HEIGHT), "HP : " + Character.CurHP + "/" + Character.MaxHP);
-			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 3*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Damage : " + Character.CurDamage);
+			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 3*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Damage : " + _GameManager.calculateDamage());
+			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 4*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Character Damage : " + Character.CurDamage);
+			if(ItemInventory.EquippedWeapon != null)
+			{
+				GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 5*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Weapon Damage    : " + ItemInventory.EquippedWeapon.Damage);
+			}
+			else
+			{
+				GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 5*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Weapon Damage    : 0(No weapon equipped)");
+			}
 			
 			
-			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 5*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Dungeon Level : " + _GameManager.MaxDungeonLevel);
-			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 6*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Influence : " + Character.InfluencePoints);
+			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 6*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Dungeon Level : " + _GameManager.MaxDungeonLevel);
+			GUI.Label(new Rect(_boxPosX + 25, _boxPosY + 7*_LINE_HEIGHT + 10, 300, _LINE_HEIGHT), "Influence : " + Character.InfluencePoints);
 			
 			
 			break;	
@@ -467,8 +591,8 @@ public class PlayerHUD : MonoBehaviour {
 			DisplaySpellBook(); //Display the inventory with all slots/item
 			break;	
 			
-		case "ItemList":
-			DisplayBoxItemList(); //Display the inventory with all slots/item
+		case "Inventory":
+			DisplayBoxWeaponList(); //Display the inventory with all slots/item
 			break;
 			
 		case "TaskList":
@@ -476,7 +600,14 @@ public class PlayerHUD : MonoBehaviour {
 			break;
 			
 		case "Map":
-			DisplayDungeonMap();
+			if(Application.loadedLevelName == "Dungeon")
+			{
+				DisplayDungeonMap();	
+			}
+			else
+			{
+				ChangeBoxView("StatList");
+			}
 			break;
 			
 		case "DungeonAbandon":
@@ -484,12 +615,28 @@ public class PlayerHUD : MonoBehaviour {
 			break;
 			
 		case "DungeonMenu":
-			DisplayDungeonMenu();
+			if(_GameManager.CurZone == "Dungeon Warp")
+			{
+				DisplayDungeonMenu();
+			}
+			else if(Application.loadedLevelName == "Dungeon")
+			{
+				ChangeBoxView("Map");
+			}
+			else
+			{
+				ChangeBoxView("Inventory");	
+			}
+			break;
+			
+		case "DungeonUpgrade":
+			DisplayDungeonUpgrade();
 			break;
 		default:
 			Debug.LogWarning ("Wrong Display in PlayerHUD :" + _toDisplay);
 			break;
 		}	
+		
 	}
 	
 	private void DisplaySpellBook()
@@ -498,16 +645,13 @@ public class PlayerHUD : MonoBehaviour {
 		
 		float spellSlot_posX   = _boxPosX;
 		float spellSlot_posY   = _boxPosX;
-		float spellSlot_sizeX = invSlot_sizeX;
-		float spellSlot_sizeY = invSlot_sizeY;
 		float _barRatio;
 		float _barLength = _boxSizeX/4;
 		float _barHeight = _LINE_HEIGHT;
 		
 		for(int i = 0; i < Character.SpellList.Length; i++)
 		{	
-			//invSlot_posX = _boxPosX+(i*spellSlot_sizeX)+(i*invSlot_offset) + invSlot_offset;
-			spellSlot_posY = _boxPosY+(i*spellSlot_sizeY)+(i*invSlot_offset) + invSlot_offset;
+			spellSlot_posY = _boxPosY+(i*invSlot_sizeY)+(i*invSlot_offset) + invSlot_offset;
 			GUI.Label(new Rect(spellSlot_posX, spellSlot_posY + invSlot_sizeY/2, invSlot_sizeX, invSlot_sizeY), Character.SpellList[i].Category);
 			if(GUI.Button(new Rect(spellSlot_posX + 50, spellSlot_posY, invSlot_sizeX, invSlot_sizeY), Character.SpellList[i].SpellIcon))
 			{
@@ -599,73 +743,254 @@ public class PlayerHUD : MonoBehaviour {
 		}
 		
 	}
+
 	
 	private void DisplayDungeonMenu()
 	{
-		//DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();
-		float dungeonLvlButton_sizeX = invSlot_sizeX*0.75f;
-		float dungeonLvlButton_sizeY = invSlot_sizeY*0.75f;
-		float dungeonLvlButton_offset = 10;
-		float dungeonLvlButton_posX = _boxPosX;
-		float dungeonLvlButton_posY = _boxPosY;
-		int dungeonLvl;
 		
-		GUI.Label 	   (new Rect(_boxPosX, _boxPosY + _LINE_HEIGHT*1.5f  , 150 , _LINE_HEIGHT),"Dungeon Entrance" );
-		GUI.Label 	   (new Rect(_boxPosX, _boxPosY + _LINE_HEIGHT*2.5f  , 250 , _LINE_HEIGHT),"Change difficulty for better reward!" );
-			
-		for(int i = 1; i <= 10; i++)
+		float _offset = 10.0f;
+		float _textLength = 200.0f;
+		float _button1posX = _boxSizeX + _textLength;
+		float _curPosX = _boxPosX + _offset;
+		float _curPosY = _boxPosY + _offset;
+		
+		// Menu
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Dungeon Menu" ); _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"------------" ); _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Dungeon Level : " ); _curPosY += _LINE_HEIGHT;
+		
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Influences Points : "  + Character.InfluencePoints.ToString ()); _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Coin : " + Inventory.RessourceList[(int)RessourceName.Coin].CurValue); _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Dungeon Max Level : " + _GameManager.MaxDungeonLevel.ToString()); _curPosY += _LINE_HEIGHT*1.25f;
+		if(GUI.Button (new Rect(_curPosX, _curPosY, invSlot_sizeX*0.5f , invSlot_sizeY*0.5f),"-" ))
 		{
-			for(int j = 0; j < 2; j++)
+			if(DungeonToGenerate.level > 1)
 			{
-				dungeonLvl = (i + 10*j);
-				dungeonLvlButton_posX = _boxPosX+(i*dungeonLvlButton_sizeX)+(i*dungeonLvlButton_offset) + dungeonLvlButton_offset;
-				dungeonLvlButton_posY = _boxPosY+(j*dungeonLvlButton_sizeY)+(j*dungeonLvlButton_offset) + dungeonLvlButton_offset + _LINE_HEIGHT*3.5f;
-				
-				if(dungeonLvl > _GameManager.MaxDungeonLevel)
-				{
-					GUI.enabled = false;
-				}
-				
-				if(GUI.Button(new Rect(dungeonLvlButton_posX, dungeonLvlButton_posY, dungeonLvlButton_sizeX, dungeonLvlButton_sizeY),dungeonLvl.ToString ()))
-				{
-					_GameManager.StartDungeon (dungeonLvl);
-				}
-				GUI.enabled = true;
-			}	
+				DungeonToGenerate.level--;
+			}
 		}
-				
+		
+		_curPosX += invSlot_sizeX*0.5f + _offset;	
+		
+		GUI.Button (new Rect(_curPosX, _curPosY-_LINE_HEIGHT*0.5f, invSlot_sizeX       , invSlot_sizeY      ),DungeonToGenerate.level.ToString()); _curPosX += invSlot_sizeX + _offset;
+		if(GUI.Button (new Rect(_curPosX, _curPosY, invSlot_sizeY*0.5f , invSlot_sizeY*0.5f),"+" ))
+		{
+			if(DungeonToGenerate.level < _GameManager.MaxDungeonLevel && DungeonToGenerate.level < 20)
+			{
+				if(DungeonToGenerate.level < 10 || DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.SkeletonCrypt].IsEnabled == true)
+				{
+					DungeonToGenerate.level++;
+				}
+			}
+		}
+		
+		_curPosX = _boxPosX + _offset;
+		
+		//Button for Hardcore Mode
+		if(DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.HardcoreMode].IsEnabled == true)
+		{
+			if(GUI.Button (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*6.0f, invSlot_sizeX*1.0f , invSlot_sizeY*0.5f),DungeonToGenerate.isHardcore.ToString())){ToggleMode("Hardcore");} _curPosX+=invSlot_sizeX + _offset;
+			GUI.Label (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*6.0f, _textLength , invSlot_sizeY*0.5f),"Hardcore Mode");
+		}
+		
+		// Button for Wave Mode
+		// _curPosX = _boxPosX + _offset;
+		// if(GUI.Button (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*7.0f, invSlot_sizeX*1.0f , invSlot_sizeY*0.5f),DungeonToGenerate.isWave.ToString())){ToggleMode("Wave");} _curPosX+=invSlot_sizeX + _offset;
+		// GUI.Label (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*7.0f, _textLength , invSlot_sizeY*0.5f),"Wave Mode");
+		
+		
+		if(GUI.Button (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*10.0f, invSlot_sizeX*2.0f , invSlot_sizeY*1.0f),"Enter Dungeon" ))
+		{
+			_GameManager.StartDungeon (DungeonToGenerate);
+		}
+		
+		
+		
+		_curPosX += invSlot_sizeX*2.0f + _offset;
+		
+		// First upgrade or DungeonUpgrade
+		if(DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.FirstUpgrade].IsEnabled == false)
+		{
+			if(GUI.Button (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*10.0f, invSlot_sizeX*3.0f , invSlot_sizeY*0.75f), new GUIContent("Upgrade to upgrade", "mouseOverOnDungeonUpgrade" + DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.FirstUpgrade].Name)))
+			{
+				_GameManager.UpgradeDungeon (DungeonLevelPool.DungeonUpgradeList[(int)DungeonUpgradeName.FirstUpgrade]);
+			}
+			
+			_mouseOver = GUI.tooltip;
+		}
+		else
+		{
+			if(GUI.Button (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*10.0f, invSlot_sizeX*3.0f , invSlot_sizeY*0.75f),"Upgrade Menu" ))
+			{
+				ToDisplayInBox = "DungeonUpgrade";
+			}
+		}
+		
+		
+		// Display selected dungeon info
+		_curPosX = _boxPosX + _boxSizeX/3;
+		_curPosY = _boxPosY + _offset;
+		GUI.Label (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT), DungeonLevelPool.DungeonLevelList[DungeonToGenerate.level].Name);_curPosY += _LINE_HEIGHT;
+		GUI.Label (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT), "------------------------");_curPosY += _LINE_HEIGHT;
+		
+		List<Utility.ParsedString> _ListMonsterToSpawn  = new List<Utility.ParsedString>();	//Declare a list that contain all the monster to spawn
+		
+		_ListMonsterToSpawn = Utility.parseString (DungeonLevelPool.DungeonLevelList[DungeonToGenerate.level].MonsterList);
+		
+		for(int i = 0; i < _ListMonsterToSpawn.Count; i++)
+		{
+			MonsterName _MonsterIndex = (MonsterName) Enum.Parse(typeof(MonsterName), _ListMonsterToSpawn[i].type); 
+			Monster MonsterToSpawn = Bestiary.MonsterList[(int)_MonsterIndex];
+			
+			if(_ListMonsterToSpawn[i].nbr > 0)
+			{
+				GUI.Label (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT), _ListMonsterToSpawn[i].nbr + "*" + _ListMonsterToSpawn[i].type + "(" + MonsterToSpawn.NbrKilled + ")");
+				_curPosY += _LINE_HEIGHT;
+			}
+		}
 	}
 		
+	private void DisplayDungeonUpgrade()
+	{
+		float _offset = 10.0f;
+		float _curPosX = _boxPosX + _offset;
+		float _curPosY = _boxPosY + _offset;
+		float _textLength = 200.0f;
+		
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Dungeon Upgrade Menu" )    ; _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"--------------------" )   ; _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Influences Points : "  + Character.InfluencePoints.ToString ()); _curPosY += _LINE_HEIGHT;
+		GUI.Label  (new Rect(_curPosX, _curPosY, _textLength , _LINE_HEIGHT),"Coin : " + Inventory.RessourceList[(int)RessourceName.Coin].CurValue); _curPosY += _LINE_HEIGHT;
+		
+		for(int i = 0; i <  DungeonLevelPool.DungeonUpgradeList.Length; i++)
+		{
+			if(DungeonLevelPool.DungeonUpgradeList[i].IsUnlocked && !DungeonLevelPool.DungeonUpgradeList[i].IsEnabled && DungeonLevelPool.DungeonUpgradeList[i].Name != "First Upgrade")
+			{				
+				if(GUI.Button (new Rect(_curPosX, _curPosY, invSlot_sizeX*2.0f , invSlot_sizeY*1.0f), new GUIContent(DungeonLevelPool.DungeonUpgradeList[i].Name, "mouseOverOnDungeonUpgrade" + DungeonLevelPool.DungeonUpgradeList[i].Name)))
+				{
+					_GameManager.UpgradeDungeon (DungeonLevelPool.DungeonUpgradeList[i]);
+				}
+				_curPosY += invSlot_sizeY + _offset;
+			}
+		}
+		
+		if(GUI.Button (new Rect(_curPosX, _boxPosY + _LINE_HEIGHT*10.0f, invSlot_sizeX*2.0f , invSlot_sizeY*1.0f),"RETURN" ))
+		{
+			ToDisplayInBox = "DungeonMenu";
+		}
+		
+		_mouseOver = GUI.tooltip;
+	}
+
+	private void ToggleMode(string _modeToToggle)
+	{
+		if(_modeToToggle == "Hardcore")
+		{
+			DungeonToGenerate.isHardcore = !DungeonToGenerate.isHardcore;
+		}
+		
+		
+		else if(_modeToToggle == "Wave")
+		{
+			DungeonToGenerate.isWave = !DungeonToGenerate.isWave;
+		}
+	}
+
 	private void AbandonDungeon() //TODO: Probably to move somewhere else
 	{
-		
 		DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();	
 		_DungeonManager.Abandon();
 	}
 	
 	private void DisplayDungeonMap()
 	{
-		int[,] _map;
-		DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();	
-		_map = _DungeonManager.DungeonMap;
-		Debug.Log (Mathf.Round(_PlayerMaster.transform.position.x));
-		Debug.Log (Mathf.Round(_PlayerMaster.transform.position.z));
-		for(int j = _DungeonManager.MapSizeZ - 1; j >= 0  ; j--)
+		DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();
+		
+		int playerPosX = Mathf.RoundToInt(_Player.transform.position.x);
+		int playerPosZ = Mathf.RoundToInt(_Player.transform.position.z);
+		
+		// Display Map
+		float _offsetX  = 150.0f;
+		float _offsetZ  = 120.0f;
+		float _curPosX =  _offsetX;
+		float _curPosZ =  _offsetZ;
+		
+		string _toPrint;
+		
+		float sizeSlotX = 15.0f;
+		float sizeSlotZ = 15.0f;
+		
+		
+		int nbrSlotX = Mathf.CeilToInt (_boxSizeX/sizeSlotX) - 5;
+		int nbrSlotZ = Mathf.CeilToInt (_boxSizeY/sizeSlotZ) - 5;
+		
+		int _mapToDisplayPosXmin = 0;
+		int _mapToDisplayPosZmin = 0;
+		
+		int _mapToDisplayPosXmax = nbrSlotX - 1;
+		int _mapToDisplayPosZmax = nbrSlotZ - 1;
+		
+		if(_mapToDisplayPosXmax > _DungeonManager.MapSizeX) {_mapToDisplayPosXmax = _DungeonManager.MapSizeX - 1;}
+		if(_mapToDisplayPosZmax > _DungeonManager.MapSizeZ) {_mapToDisplayPosZmax = _DungeonManager.MapSizeZ - 1;}
+		
+		
+		if(playerPosX > _mapToDisplayPosXmax)
 		{
-			for(int i = 0; i < _DungeonManager.MapSizeX ; i++)
+			_mapToDisplayPosXmin = 	playerPosX - nbrSlotX/2;
+			_mapToDisplayPosXmax = 	playerPosX + nbrSlotX/2;	
+		}
+		
+		if(playerPosZ > _mapToDisplayPosZmax)
+		{
+			_mapToDisplayPosZmin = 	playerPosZ - nbrSlotZ/2;
+			_mapToDisplayPosZmax = 	playerPosZ + nbrSlotZ/2;	
+		}
+		
+		if(_mapToDisplayPosXmax > _DungeonManager.MapSizeX) {_mapToDisplayPosXmax = _DungeonManager.MapSizeX - 1 ;}
+		if(_mapToDisplayPosZmax > _DungeonManager.MapSizeZ) {_mapToDisplayPosZmax = _DungeonManager.MapSizeZ - 1;}
+		
+		
+		
+		//Debug.Log ("x(" + _mapToDisplayPosXmin + "," + _mapToDisplayPosXmax + ") - z(" + _mapToDisplayPosZmin + "," + _mapToDisplayPosZmax + ")");
+		//Debug.Log ("Size(" + nbrSlotX + "," + nbrSlotZ + ")");
+		
+		
+		// Display map rotation difference
+		GUI.Label (new Rect(_curPosX, _curPosZ, _boxSizeX/2, _LINE_HEIGHT), "Map rotation : " + _Player.transform.rotation.eulerAngles.y  + "° (0° for map aligned)"); _curPosZ += _LINE_HEIGHT;
+		
+		// Display map
+		float _mapToDisplayStartPosZ = _curPosZ;
+		for(int i = _mapToDisplayPosXmin; i < _mapToDisplayPosXmax - 1  ; i++)
+		{
+			for(int j = _mapToDisplayPosZmax - 1; j >= _mapToDisplayPosZmin ; j--)
 			{
 				if(i == Mathf.Round(_Player.transform.position.x) && j == Mathf.Round(_Player.transform.position.z))
 				{
 					GUI.color = Color.blue;	
-					GUI.Label(new Rect(_boxPosX + i*10, _boxPosY + 15 * j, 15, 15), "P");		
-					GUI.color = Color.white;	
-					Debug.Log ("Player found at : " + i + "," + j);
+					_toPrint = "X";
 				}
-				else
+				else if(_mapToDisplay[i,j] == 1) //Unknown room
 				{
-					GUI.Label(new Rect(_boxPosX + i*10, _boxPosY + 15 * j, 15, 15), _map[i,j].ToString());		
+					GUI.color = Color.gray;	
+					_toPrint = "#";
 				}
+				else if(_mapToDisplay[i,j] == 2) //Known room
+				{
+					GUI.color = Color.white;	
+					_toPrint = "#";
+				}
+				else // Outside
+				{
+					_toPrint = "";
+				}
+				
+				GUI.Label(new Rect(_curPosX, _curPosZ, sizeSlotX, sizeSlotZ), _toPrint);
+				GUI.color = Color.white;
+				_curPosZ += sizeSlotZ;
+				
 			}	
+			_curPosZ = _mapToDisplayStartPosZ;
+			_curPosX += sizeSlotX;
 		}
 		
 	}
@@ -687,7 +1012,7 @@ public class PlayerHUD : MonoBehaviour {
 		}	
 	}
 		
-	private void DisplayBoxItemList()
+	private void DisplayBoxWeaponList()
 	{
 		float invSlot_posX   = _boxPosX;
 		float invSlot_posY   = _boxPosX;
@@ -707,25 +1032,27 @@ public class PlayerHUD : MonoBehaviour {
 				_curSlot = (i + 10*j);
 				invSlot_posX = _boxPosX+(i*invSlot_sizeX)+(i*invSlot_offset) + invSlot_offset;
 				invSlot_posY = _boxPosY+(j*invSlot_sizeY)+(j*invSlot_offset) + invSlot_offset;
-				if(ItemInventory.InventoryList[_curSlot].slotItem != null)
+				if(ItemInventory.InventoryList[_curSlot].slotWeapon != null)
 				{
-					if(GUI.Button(new Rect(invSlot_posX, invSlot_posY, invSlot_sizeX, invSlot_sizeY),ItemInventory.InventoryList[_curSlot].slotItem.ItemIcon))
+					if(GUI.Button(new Rect(invSlot_posX, invSlot_posY, invSlot_sizeX, invSlot_sizeY), new GUIContent(ItemInventory.InventoryList[_curSlot].slotWeapon.ItemIcon, "mouseOverOnInventorySlot_" + _curSlot.ToString())   ))
 					{
 						_inventorySlotClicked = (_curSlot);
 		       			if (Event.current.button == 1)
 						{
-							GUI.Label 	   (new Rect(_POSX, _LINE_HEIGHT*3.5f  , 300 , _LINE_HEIGHT),"BL:ALBALBA" );
-							_ItemClicked  = ItemInventory.InventoryList[_curSlot].slotItem;
+							GUI.Label 	   (new Rect(_POSX, _LINE_HEIGHT*3.5f  , 300 , _LINE_HEIGHT),"Menu" );
+							_ItemClicked  = ItemInventory.InventoryList[_curSlot].slotWeapon;
 							_MousePosOnClick = 	new Vector2(Event.current.mousePosition.x,Event.current.mousePosition.y);
 							
 							_isDisplayFloatingMenu = true;
 						}
 						else if (Event.current.button == 0)
 						{
-							EquipItem(ItemInventory.InventoryList[_curSlot].slotItem, _curSlot);
+							EquipWeapon(ItemInventory.InventoryList[_curSlot].slotWeapon, _curSlot);
 						}
 						
 					}
+					
+					_mouseOver = GUI.tooltip;
 				}
 				else
 				{
@@ -780,7 +1107,7 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayFloatingLabels(List<string> _toDisplay) 
 	{
-		float _posX  = Input.mousePosition.x; float _posY  = Mathf.Abs(Input.mousePosition.y - _PlayerCam.pixelHeight) + _LINE_HEIGHT;
+		float _posX  = Input.mousePosition.x; float _posY  = Mathf.Abs(Input.mousePosition.y - _PlayerCam.pixelHeight) + 4*_LINE_HEIGHT;
 		float _sizeX = Screen.width/8;   float _sizeY = _toDisplay.Count*_LINE_HEIGHT;
 		float _opacity = _FLOATING_RECT_OPACITY;
 		
@@ -789,12 +1116,12 @@ public class PlayerHUD : MonoBehaviour {
 		// Display string[] in FloatingLabels
 		for(int i = 0; i < _toDisplay.Count; i++)
 		{
-			GUI.Label (new Rect(_posX, _posY + i*_LINE_HEIGHT , _sizeX, _LINE_HEIGHT), _toDisplay[i]);
+			GUI.Label (new Rect(_posX, _posY + i*_LINE_HEIGHT , _sizeX, _LINE_HEIGHT*0.8f), _toDisplay[i]);
 		}
 	}
 	
 	// Display a floating menu to interact with
-	private void DisplayFloatingMenu(Vector2 _position, Item _ItemRightClicked, int _inventorySlotNumber)
+	private void DisplayFloatingMenu(Vector2 _position, Weapon _ItemRightClicked, int _inventorySlotNumber)
 	{;
 		float _posX  = _position.x;        float _posY  = _position.y;
 		float _sizeX = _boxSizeX*0.20f ;   float _sizeY = 4*_LINE_HEIGHT;
@@ -807,13 +1134,13 @@ public class PlayerHUD : MonoBehaviour {
 		GUI.Label  (new Rect(_posX, _posY + _lineCnt++*_LINE_HEIGHT , _sizeX, _LINE_HEIGHT)   ,_ItemRightClicked.Name);
 		if(GUI.Button (new Rect(_posX, _posY + _lineCnt++*_LINE_HEIGHT , _sizeX, _LINE_HEIGHT)   ,"Equip"))
 		{
-			EquipItem(_ItemRightClicked, _inventorySlotNumber);
+			EquipWeapon(_ItemRightClicked, _inventorySlotNumber);
 			CloseMenu ();
 		}
 			
 		if(GUI.Button (new Rect(_posX, _posY + _lineCnt++*_LINE_HEIGHT , _sizeX, _LINE_HEIGHT),"Delete"))
 		{
-			RemoveItemFromInventory(_inventorySlotNumber);
+			ItemInventory.RemoveItemFromInventory(_inventorySlotNumber);
 			CloseMenu ();
 		}
 		
@@ -823,35 +1150,11 @@ public class PlayerHUD : MonoBehaviour {
 		}
 	}
 	
-	private void EquipItem(Item _ItemToEquip, int _slotNbr)
+	private void EquipWeapon(Weapon _WeaponToEquip, int _slotNbr)
 	{	
-		RemoveItemFromInventory(_inventorySlotClicked);
-		
-		if(ItemInventory.EquippedItem != Inventory.ItemList[(int)ItemName.None])
-		{
-			UnEquipItem();
-		}
-		
-		ItemInventory.EquipItem(_ItemToEquip);
-		AddChatLog("[ITEM] You equipped " + _ItemToEquip.Name);
-	}
-	
-	private void UnEquipItem()
-	{
-		int _emptySlot;
-		_emptySlot = ItemInventory.FindFirstEmptySlot();
-		
-		ItemInventory.InventoryList[_emptySlot].slotItem = ItemInventory.EquippedItem;
-		ItemInventory.InventoryList[_emptySlot].slotCount = 1;
-		ItemInventory.InventoryList[_emptySlot].isSlotFull = true;
-		ItemInventory.UnequipItem();
-	}
-	
-	private void RemoveItemFromInventory(int _slotNbr)
-	{
-		ItemInventory.InventoryList[_slotNbr].slotItem = null;
-		ItemInventory.InventoryList[_slotNbr].slotCount = 0;
-		ItemInventory.InventoryList[_slotNbr].isSlotFull = false;
+		ItemInventory.RemoveItemFromInventory(_inventorySlotClicked);
+		ItemInventory.EquipWeapon(_WeaponToEquip);
+		AddChatLog("[ITEM] You equipped " + _WeaponToEquip.Name);
 	}
 	
 	private void CloseMenu()

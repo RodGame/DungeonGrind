@@ -164,7 +164,7 @@ public class PetAI_Astar : MonoBehaviour {
 	        
 			
 			//Vector3 _PlayerPosAtGround = new Vector3(playerPosition.x, Utility.FindTerrainHeight(playerPosition.x,playerPosition.z), playerPosition.z);
-			Vector3 _WaypointPosAtGround = new Vector3(path.vectorPath[currentWaypoint].x, Utility.FindTerrainHeight(path.vectorPath[currentWaypoint].x,path.vectorPath[currentWaypoint].z), path.vectorPath[currentWaypoint].z);
+			Vector3 _WaypointPosAtGround = new Vector3(path.vectorPath[currentWaypoint].x, Utility.FindTerrainHeight(path.vectorPath[currentWaypoint].x,path.vectorPath[currentWaypoint].z,0.0f), path.vectorPath[currentWaypoint].z);
 			Quaternion _quatFrom = transform.rotation;
 			Quaternion _quatTo = Quaternion.LookRotation (_WaypointPosAtGround - transform.position);
 		

@@ -31,11 +31,8 @@ public class MonsterAI_Astar : MonoBehaviour {
 		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 		_MonsterProfile = GetComponent<MonsterProfile>();
 		
-		//Setup animation 
-		animation["attack_Melee"].wrapMode = WrapMode.Once; 
 		
-		
-        
+		animation[_MonsterProfile.CurMonster.AnimAttkName].wrapMode = WrapMode.Once; 
     }
     
     public void OnPathComplete (Path p) {
@@ -75,21 +72,27 @@ public class MonsterAI_Astar : MonoBehaviour {
 	
 	void MoveMonster()
 	{
+		speed = _MonsterProfile.MoveSpeed;
 		dir = (path.vectorPath[currentWaypoint]-transform.position).normalized;
+		//dir.y = transform.position.y;
+		//dir.Normalize ();
         dir *= speed * Time.fixedDeltaTime;
+		//transform.position += dir;
 		
-		Vector3 _PlayerPosAtGround   = new Vector3(playerPosition.x, Utility.FindTerrainHeight(playerPosition.x,playerPosition.z), playerPosition.z);
-		Vector3 _WaypointPosAtGround = new Vector3(path.vectorPath[currentWaypoint].x, Utility.FindTerrainHeight(path.vectorPath[currentWaypoint].x,path.vectorPath[currentWaypoint].z), path.vectorPath[currentWaypoint].z);
+		Vector3 _PlayerPosAtGround   = new Vector3(playerPosition.x, Utility.FindTerrainHeight(playerPosition.x,playerPosition.z, 0.0f), playerPosition.z);
+		//Vector3 _PlayerPosAtGround   = new Vector3(playerPosition.x, transform.position.y, playerPosition.z);
+		//Vector3 _WaypointPosAtGround = new Vector3(path.vectorPath[currentWaypoint].x, Utility.FindTerrainHeight(path.vectorPath[currentWaypoint].x,path.vectorPath[currentWaypoint].z, 0.0f), path.vectorPath[currentWaypoint].z);
 		Quaternion _quatFrom = transform.rotation;
 		Quaternion _quatTo = Quaternion.LookRotation (_PlayerPosAtGround - transform.position);
 	
 		transform.rotation = Quaternion.Slerp(_quatFrom, _quatTo, rotaSpeed*Time.deltaTime);
-		controller.SimpleMove (dir);
+		GetComponent<CharacterController>().SimpleMove(dir);
+
 	}
 	
 	void EvaluateMonsterState()
 	{
-	distanceToPlayer = Vector3.Distance(transform.position,playerPosition);
+		distanceToPlayer = Vector3.Distance(transform.position,playerPosition);
 		
 		timeToMonsterAttack -= Time.deltaTime;
 		if(monsterState == 0 && distanceToPlayer < _MonsterProfile.SightRange)
@@ -102,7 +105,7 @@ public class MonsterAI_Astar : MonoBehaviour {
 		{
 			
 			timeLastPathUpdate += Time.deltaTime;
-			transform.animation.CrossFade("walk");
+			transform.animation.CrossFade(_MonsterProfile.CurMonster.AnimWalkName);
 			
 			if(timeLastPathUpdate >= timeToUpdatePath)
 			{
@@ -130,14 +133,18 @@ public class MonsterAI_Astar : MonoBehaviour {
 			}
 			else
 			{
-					transform.animation.PlayQueued ("iddle");
+					transform.animation.PlayQueued (_MonsterProfile.CurMonster.AnimIdleName);
 			}
-		}	
+		}
+		else
+		{
+			transform.animation.PlayQueued (_MonsterProfile.CurMonster.AnimIdleName);	
+		}
 	}
 	
 	void AttackPlayer()
 	{
-		animation.Play("attack_Melee");
+		animation.Play(_MonsterProfile.CurMonster.AnimAttkName);
 		_GameManager.AddChatLogHUD("[FIGH] You lost hp");
 		Character.LoseHp(_MonsterProfile.Damage);
 	}

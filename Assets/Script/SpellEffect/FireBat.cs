@@ -23,14 +23,21 @@ public class FireBat : MonoBehaviour {
 	
 	void OnCollisionEnter(Collision _Collision)
 	{
-		
-		Debug.Log ("Collision");
 		if(_Collision.collider.tag == "Monster" && !_monsterHit.Contains(_Collision.collider.GetInstanceID()))
 		{
 			_monsterHit.Add (_Collision.collider.GetInstanceID());
 			
 			int spellDamage = Character.SpellList[(int)SpellName.FireBat].Damage;
-			MonsterProfile _MonsterProfile = _Collision.collider.gameObject.transform.parent.GetComponent<MonsterProfile>();
+			MonsterProfile _MonsterProfile;
+			
+			if(_Collision.collider.gameObject.GetComponent<MonsterProfile>() != null)
+			{
+					_MonsterProfile = _Collision.collider.gameObject.GetComponent<MonsterProfile>();
+			}
+			else
+			{
+					_MonsterProfile = _Collision.collider.gameObject.transform.parent.GetComponent<MonsterProfile>();
+			}
 			
 			// Damage Monster
 			_MonsterProfile.DamageMonster(spellDamage);

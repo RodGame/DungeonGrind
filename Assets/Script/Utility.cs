@@ -18,7 +18,7 @@ static class Utility {
 		
 		float _posX = _originPosition.x + Random.Range (_minX, _maxX);
 		float _posZ = _originPosition.z + Random.Range (_minZ, _maxZ);
-		float _posY = FindTerrainHeight(_posX, _posZ);
+		float _posY = FindTerrainHeight(_posX, _posZ, 0.0f);
 		
 		if(Terrain.activeTerrain != null)
 		{
@@ -33,10 +33,9 @@ static class Utility {
 		return _RandomPosition;
 	}
 	
-	public static float FindTerrainHeight(float _x, float _y)
+	public static float FindTerrainHeight(float _x, float _y, float _offset)
 	{
 		GameObject _GO_Ground = GameObject.FindGameObjectWithTag("Ground");
-		float _offset = 0.5f;
 		
 		if(_GO_Ground.name == "Terrain")
 		{

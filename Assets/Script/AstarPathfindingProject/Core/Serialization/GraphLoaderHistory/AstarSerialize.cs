@@ -912,7 +912,120 @@ namespace Pathfinding {
 		}
 		
 		/** Deserializes a Unity Reference. Deserializes references such as Transform, GameObject, Texture or other unity objects */
-		public virtual UnityEngine.Object GetUnityReferenceValue (string key, Type type, UnityEngine.Object defaultValue = null) {
+		public virtual UnityEngine.Object GetUnityReferenceValue (string key, Type type) {
+			UnityEngine.Object defaultValue = null;
+			//Segment --- Should be (except for the defaultValue cast) identical to a segment in GetUnityReferenceValue/GetValue
+			if (!MoveToVariableAnchor (key)) {
+				Debug.Log ("Couldn't find key '"+key+"' in the data, returning default");
+				return (defaultValue == null ? GetDefaultValue (type) : defaultValue) as UnityEngine.Object;
+			}
+			
+			BinaryReader stream = readerStream;
+			
+			int magicNumber = (int)stream.ReadByte ();
+			
+			if (magicNumber == 0) {
+				return (defaultValue == null ? GetDefaultValue (type) : defaultValue) as UnityEngine.Object;//Null reference
+			} else if (magicNumber == 2) {
+				Debug.Log ("The variable '"+key+"' was not serialized correctly and can therefore not be deserialized");
+				return (defaultValue == null ? GetDefaultValue (type) : defaultValue) as UnityEngine.Object;
+			}
+			//Else - magic number is 1 - indicating correctly serialized data
+			//Segment --- End
+			
+			int instanceID = stream.ReadInt32 ();
+			string obName = stream.ReadString ();
+							
+			if (instanceID == -128) {//Magic number
+				return active.gameObject;
+			} else if (instanceID == -129) { //Magic number
+				return active.transform;
+			}
+			
+			//GUID
+			string guid = stream.ReadString ();
+			
+			UnityReferenceHelper[] helpers = UnityEngine.Object.FindSceneObjectsOfType (typeof(UnityReferenceHelper)) as UnityReferenceHelper[];
+			
+			for (int i=0;i<helpers.Length;i++) {
+				if (helpers[i].GetGUID () == guid) {
+					if (type == typeof(GameObject)) {
+						return helpers[i].gameObject;
+					} else {
+						return helpers[i].GetComponent (type);
+					}
+				}
+			}
+			
+			//Always false from 3.0.8 and up
+			//bool didSaveFromEditor = 
+				stream.ReadBoolean ();
+			
+			//UnityEngine.Object[] ueObs = Resources.FindObjectsOfTypeAll (type);
+			
+			//Try to load from resources
+			UnityEngine.Object[] objs = Resources.LoadAll (obName,type);
+			
+			for (int i=0;i<objs.Length;i++) {
+				if (objs[i].name == obName || objs.Length == 1) {
+					return objs[i];
+				}
+			}
+			
+			return null;
+			
+			
+			
+			/*if (readUnityReference_Editor != null && didSaveFromEditor) {
+				UnityEngine.Object eob = readUnityReference_Editor (this,obName,instanceID,type);
+				if (eob != null && eob.name == obName) {
+					return eob;
+				} else if (ob3 != null) {
+					return ob3;
+				} else {
+					return eob;
+				}
+			}
+			
+			//If the editor deserialization didn't come up with a better answer, return ob3 if it isn't null
+			if (ob3 != null) {
+				return ob3;
+			}
+			
+			//Last resort, find all objects of type and check them for the instance ID
+			UnityEngine.Object[] ueObs = Resources.FindObjectsOfTypeAll (type);
+				//UnityEngine.Object.FindObjectsOfType (type);
+			
+			UnityEngine.Object ob1 = null;
+			
+			for (int i=0;i<ueObs.Length;i++) {
+				if (ueObs[i].GetInstanceID () == instanceID) {
+					ob1 = ueObs[i];
+					break;
+				}
+				
+				//Connecting it based on name is a bit too vague
+				/*if (ueObs[i].name == obName) {
+					ob2 = ueObs[i];
+				}*
+			}
+			
+			if (ob1 != null) {
+				return ob1;
+			}
+			
+			//Try to load from resources
+			UnityEngine.Object ob4 = Resources.Load (obName);
+			
+			return ob4;
+			if (ob1 != null) {
+				return ob1;
+			} else {
+				return ob2;
+			}*/
+		}
+		
+		public virtual UnityEngine.Object GetUnityReferenceValue (string key, Type type, UnityEngine.Object defaultValue) {
 			//Segment --- Should be (except for the defaultValue cast) identical to a segment in GetUnityReferenceValue/GetValue
 			if (!MoveToVariableAnchor (key)) {
 				Debug.Log ("Couldn't find key '"+key+"' in the data, returning default");
@@ -1051,7 +1164,8 @@ namespace Pathfinding {
 		}
 		
 		/** Deserializes a variable with key of the specified type */
-		public System.Object GetValue (string key, Type type, System.Object defaultValue = null) {
+		public System.Object GetValue (string key, Type type) {
+			System.Object defaultValue = null;
 			
 			//Segment --- Should be identical to a segment in GetUnityReferenceValue/GetValue
 			if (!MoveToVariableAnchor (key)) {
@@ -1124,6 +1238,78 @@ namespace Pathfinding {
 			return ob;
 		}
 		
+		public System.Object GetValue (string key, Type type, System.Object defaultValue) {
+			
+			//Segment --- Should be identical to a segment in GetUnityReferenceValue/GetValue
+			if (!MoveToVariableAnchor (key)) {
+				Debug.Log ("Couldn't find key '"+key+"' in the data, returning default ("+(defaultValue == null ? "null" : defaultValue.ToString ())+")");
+				return defaultValue == null ? GetDefaultValue (type) : defaultValue;
+			}
+			
+			BinaryReader stream = readerStream;
+			
+			int magicNumber = (int)stream.ReadByte ();
+			
+			if (magicNumber == 0) {
+				return defaultValue == null ? GetDefaultValue (type) : defaultValue;//Null reference usually
+			} else if (magicNumber == 2) {
+				Debug.Log ("The variable '"+key+"' was not serialized correctly and can therefore not be deserialized");
+				return defaultValue == null ? GetDefaultValue (type) : defaultValue;
+			}
+			//Else - magic number is 1 - indicating correctly serialized data
+			//Segment --- End
+			
+			System.Object ob = null;
+			
+			if (type == typeof (int)) {
+				ob = stream.ReadInt32 ();
+			} else if (type == typeof (string)) {
+				ob = stream.ReadString ();
+			} else if (type == typeof (float)) {
+				ob = stream.ReadSingle ();
+			} else if (type == typeof (bool)) {
+				ob = stream.ReadBoolean ();
+			} else if (type == typeof (Vector3)) {
+				ob = new Vector3 (stream.ReadSingle (),stream.ReadSingle (),stream.ReadSingle ());
+			} else if (type == typeof (Vector2)) {
+				ob = new Vector2 (stream.ReadSingle (),stream.ReadSingle ());
+			} else if (type == typeof (Matrix4x4)) {
+				Matrix4x4 m = new Matrix4x4 ();
+				for (int i=0;i<16;i++) {
+					m[i] = stream.ReadSingle ();
+				}
+				ob = m;
+			} else if (type == typeof (Bounds)) {
+				Bounds b = new Bounds ();
+				b.center = new Vector3 (stream.ReadSingle (),stream.ReadSingle (),stream.ReadSingle ());
+				b.extents = new Vector3 (stream.ReadSingle (),stream.ReadSingle (),stream.ReadSingle ());
+				ob = b;
+			} else {
+				
+				if (type.GetConstructor (Type.EmptyTypes) != null) {
+					System.Object testOb = Activator.CreateInstance (type);
+					
+					ISerializableObject sOb = (ISerializableObject)testOb;
+					
+					if (sOb != null) {
+						string prePrefix = sPrefix;
+						//Add to the prefix to avoid name collisions
+						sPrefix += key + ".";
+						
+						sOb.DeSerializeSettings (this);
+						ob = sOb;
+						sPrefix = prePrefix;
+					}
+				}
+				
+				if (ob == null) {
+					Debug.LogError ("Can't deSerialize type '"+type.Name+"'");
+					ob = defaultValue == null ? GetDefaultValue (type) : defaultValue;
+				}
+			}
+			
+			return ob;
+		}
 		public byte[] Compress (byte[] bytes) {
 			
 			/*int[] freq = new int[256];

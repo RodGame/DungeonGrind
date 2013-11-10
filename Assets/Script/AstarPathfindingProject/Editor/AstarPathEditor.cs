@@ -1825,7 +1825,67 @@ public class AstarPathEditor : Editor {
 	}
 	
 	/** Make sure every graph has a graph editor */
-	public void CheckGraphEditors (bool forceRebuild = false) {
+	public void CheckGraphEditors () {
+		bool forceRebuild = false;
+		
+		if (forceRebuild || graphEditors == null || script.graphs == null || script.graphs.Length != graphEditors.Length) {
+				
+			if (script.graphs == null) {
+				script.graphs = new NavGraph[0];
+			}
+			
+			if (graphEditors != null) {
+				for (int i=0;i<graphEditors.Length;i++) {
+					if (graphEditors[i] != null) {
+						//graphEditors[i].OnDisableUndo ();
+						graphEditors[i].OnDisable ();
+						graphEditors[i].OnDestroy ();
+					}
+				}
+			}
+			
+			graphEditors = new GraphEditor[script.graphs.Length];
+			
+			for (int i=0;i< script.graphs.Length;i++) {
+				
+				NavGraph graph = script.graphs[i];
+				
+				if (graph == null) continue;
+			
+				if (graph.guid == new Pathfinding.Util.Guid ()) {
+					Debug.LogWarning ("Zeroed guid detected, creating new randomized guid");
+					graph.guid = Pathfinding.Util.Guid.NewGuid();
+				}
+			
+				GraphEditor graphEditor = CreateGraphEditor (graph.GetType ().Name);
+				graphEditor.target = graph;
+				graphEditor.OnEnable ();
+				graphEditors[i] = graphEditor;
+			
+			
+			}
+			
+		} else {
+			for (int i=0;i< script.graphs.Length;i++) {
+				
+				if (script.graphs[i] == null) continue;
+				
+				if (graphEditors[i] == null || graphEditorTypes[script.graphs[i].GetType ().Name].editorType != graphEditors[i].GetType ()) {
+					CheckGraphEditors (true);
+					return;
+				}
+				
+				if (script.graphs[i].guid == new Pathfinding.Util.Guid ()) {
+					Debug.LogWarning ("Zeroed guid detected, creating new randomized guid");
+					script.graphs[i].guid = Pathfinding.Util.Guid.NewGuid();
+				}
+				
+				graphEditors[i].target = script.graphs[i];
+			}
+		}
+	}
+	
+	public void CheckGraphEditors (bool forceRebuild) {
 		if (forceRebuild || graphEditors == null || script.graphs == null || script.graphs.Length != graphEditors.Length) {
 				
 			if (script.graphs == null) {
@@ -1966,7 +2026,61 @@ public class AstarPathEditor : Editor {
 		return false;
 	}
 	
-	public void SaveGraphsAndUndo (EventType et = EventType.Used) {
+	public void SaveGraphsAndUndo () {
+		EventType et = EventType.Used;
+		
+		//Serialize the settings of the graphs
+		Event e = Event.current;
+		
+		if (e == null || script.astarData.GetData() == null) {
+			uint checksum;
+			byte[] bytes = SerializeGraphs (out checksum);
+			script.astarData.SetData (bytes,checksum);
+			EditorUtility.SetDirty (target);
+			return;
+		}
+		
+		if (HandleUndo ()) {
+			return;
+		}
+		
+		//To serialize settings for a grid graph takes from 0.00 ms to 7.8 ms (usually 0.0, but sometimes jumps up to 7.8 (no values in between)
+		if ((e.button == 0 && (et == EventType.MouseDown || et == EventType.MouseUp)) || (e.isKey && (e.keyCode == KeyCode.Tab || e.keyCode == KeyCode.Return)) || et == EventType.ExecuteCommand) {
+			
+			uint checksum;
+			byte[] bytes = SerializeGraphs (out checksum);
+				
+			//Check if the data is different than the previous data, use checksums
+			bool isDifferent = script.astarData.dataChecksum != checksum;
+			
+			//Only save undo if the data was different from the last saved undo
+			if (isDifferent) {
+				//This flag is set to true so we can detect if the object has been reverted
+				script.astarData.hasBeenReverted = true;
+			
+				Undo.RegisterUndo (script,"A* inspector");
+				
+				//Assign the new data
+				script.astarData.SetData (bytes, checksum);
+				
+				//Undo.SetSnapshotTarget(undoState,"A* inspector");
+				//Undo.CreateSnapshot ();
+				//Undo.RegisterSnapshot();
+				
+				script.astarData.hasBeenReverted = false;
+				
+				//stopWatch.Stop();
+				
+				EditorUtility.SetDirty (target);
+			}
+			
+			
+		}
+		
+		
+	}
+	
+	public void SaveGraphsAndUndo (EventType et) {
 		//Serialize the settings of the graphs
 		Event e = Event.current;
 		

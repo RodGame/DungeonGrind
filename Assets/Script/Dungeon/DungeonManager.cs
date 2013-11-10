@@ -19,13 +19,13 @@ public class DungeonManager : MonoBehaviour{
 	private int    _nbrMonsterLeft;
 	private int    _nbrMonsterKilled;
 	 
-	private int    _disSafeZoneSpawnPlayer = 25;
+	private int    _disSafeZoneSpawnPlayer = 10;
 	private int    _nbrOfSquareSpawned;
 	private int    _curDungeonLevel;
 	private GameObject _GO_Ground;
 	private GameObject _GO_Player;	
 	private AstarPath  _Astar;
-	
+	private PlayerHUD.DungeonParameters _CurDungeonParameters;
 	private bool _isDungeonStarted = false;
 	
 	public GameObject _TEST_PET;
@@ -64,20 +64,13 @@ public class DungeonManager : MonoBehaviour{
 		
 		Camera.mainCamera.GetComponent<Skybox>().material = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>().Material_Skybox_Dungeon;
 		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
-		_curDungeonLevel = _GameManager.DungeonLevelToSpawn;
-		
 		_GameManager.ChangeState("Play");
 		
-		_Astar = GameObject.FindGameObjectWithTag ("Astar").GetComponent<AstarPath>();
-		
-		// SETUP DUNGEON PARAMETERS
-		
-		//TODO: DungeonSize
-		
-		DungeonLevelPool.IniDungeonLevelPool();
-		_GameManager.CurZone = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].Name;
-		
-		//Dungeon size and square spawn
+		// Find information about the dungeon to spawn
+		_CurDungeonParameters = _GameManager.CurDungeonParameters;
+		_curDungeonLevel = _CurDungeonParameters.level;
+
+		// Find information about the level to spawn
 		_mapSizeX = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].SizeX;
 		_mapSizeZ = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].SizeY;
 		_nbrOfSquareSpawned = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].NbrSquareForSpawn;
@@ -92,14 +85,15 @@ public class DungeonManager : MonoBehaviour{
 		// Initialize P_Pathfinding and Player
 		IniPathfindGraph(_mapSizeX, _mapSizeZ);
 		IniPlayer(_dungeonMap, _mapSizeX, _mapSizeZ);
-		AstarPath.active.Scan ();
-		
 		
 		//Spawn all monster for the level
-		Debug.Log ("Monster Spawn : " + _monsterToSpawn);
 		SpawnAllMonster(_monsterToSpawn, _dungeonMap, _mapSizeX,_mapSizeZ);
 		
+		
+		// Finalize the dungeon iniatiliation
+		_GameManager.CurZone = DungeonLevelPool.DungeonLevelList[_curDungeonLevel].Name;
 		_isDungeonStarted = true;
+		GameObject.FindGameObjectWithTag("PlayerMaster").GetComponent<PlayerHUD>().InitializeMap(_dungeonMap, _mapSizeX, _mapSizeZ);
 	}
 	
 	void Update()
@@ -129,7 +123,7 @@ public class DungeonManager : MonoBehaviour{
 		Character.RefillMP();
 		
 		_GO_Player = GameObject.FindGameObjectWithTag("Player");
-		_playerPos = FindRandomRoomPosition(_mapRooms,_sizeX, _sizeZ);
+		_playerPos = FindRandomRoomPosition(_mapRooms,_sizeX, _sizeZ, 2.0f, 0.0f);
 		_GO_Player.transform.position = new Vector3(_playerPos.x, 3.0f, _playerPos.y);
 		
 		//GameObject.Instantiate(_TEST_PET,_GO_Player.transform.position + new Vector3(1,0,1), Quaternion.identity);
@@ -137,12 +131,13 @@ public class DungeonManager : MonoBehaviour{
 	}
 	
 	// Find a random position in a room
-	private Vector2 FindRandomRoomPosition(int[,] _mapRooms, int _sizeX, int _sizeZ)
+	private Vector2 FindRandomRoomPosition_TOMERGE(int[,] _mapRooms, int _sizeX, int _sizeZ, float _distanceFromWall)
 	{
 		int _tryCounter = 0;
 		int _tryCounterMax = 200;
 		int _x = UnityEngine.Random.Range (1,_sizeX-1);
 		int _z = UnityEngine.Random.Range (1,_sizeZ-1);
+		int _distanceFromWallMap = Mathf.CeilToInt(_distanceFromWall);
 		
 		bool _isInRoom = false;
 		
@@ -152,13 +147,16 @@ public class DungeonManager : MonoBehaviour{
 			_x = UnityEngine.Random.Range (1,_sizeX-1);
 			_z = UnityEngine.Random.Range (1,_sizeZ-1);
 			
-			for(int i = _x - 1; i <= _x + 1; i++)
+			for(int i = _x - _distanceFromWallMap; i <= _x + _distanceFromWallMap; i++)
 			{
-				for(int j = _z - 1; j <= _z + 1; j++)
+				for(int j = _z - _distanceFromWallMap; j <= _z + _distanceFromWallMap; j++)
 				{
-					if(_mapRooms[i,j] == 0)
+					if((i >= 0 && i <= _sizeX -1) && (j >= 0 && j <= _sizeZ -1))
 					{
-						_isInRoom = false;
+						if(_mapRooms[i,j] == 0)
+						{
+							_isInRoom = false;
+						}
 					}
 				}
 			}
@@ -169,22 +167,29 @@ public class DungeonManager : MonoBehaviour{
 	}
 	
 	// Overloaded function that take a safezone distance fot the player as in input
-	public Vector2 FindRandomRoomPosition(int[,] _mapRooms, int _sizeX, int _sizeZ, int _distanceSafeZone)
+	public Vector2 FindRandomRoomPosition(int[,] _mapRooms, int _sizeX, int _sizeZ, float _distanceFromWall, float _distanceSafeZone)
 	{
 		int _tryCounter = 0;
-		int _tryCounterMax = 200;
+		int _tryCounterMax = 500;
 		bool _isPlayerTooClose;
 		Vector2 _newPosition;
-		Vector2 _playerPosition = new Vector2(_GO_Player.transform.position.x, _GO_Player.transform.position.z);
-		_newPosition = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ);
 		
-		_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
-			
-		while(_isPlayerTooClose == true && _tryCounter < _tryCounterMax)
+		//Calculate a first position
+		_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall);
+		
+		//Only evaluate player distance if its above 0. This is used when the player is spawned.
+		if(_distanceSafeZone > 0.0f)
 		{
-			_newPosition = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ);
+			Vector2 _playerPosition = new Vector2(_GO_Player.transform.position.x, _GO_Player.transform.position.z);
+			
 			_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
-			_tryCounter++;
+				
+			while(_isPlayerTooClose == true && _tryCounter < _tryCounterMax)
+			{
+				_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall);
+				_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
+				_tryCounter++;
+			}
 		}
 		return _newPosition;
 	}
@@ -203,35 +208,18 @@ public class DungeonManager : MonoBehaviour{
 			MonsterName _MonsterIndex = (MonsterName) Enum.Parse(typeof(MonsterName), _ListMonsterToSpawn[i].type); 
 			Monster MonsterToSpawn = Bestiary.MonsterList[(int)_MonsterIndex];
 			for(int j = 0; j < _ListMonsterToSpawn[i].nbr; j++)
-			{
+			{ 
 				_nbrMonsterSpawned++;
-				_spawnPos = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ, _disSafeZoneSpawnPlayer);
+				_spawnPos = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ, MonsterToSpawn.Size*2.0f, _disSafeZoneSpawnPlayer + Mathf.RoundToInt(_curDungeonLevel * 0.5f));
 				_monsterPosition.x = _spawnPos.x;
 				_monsterPosition.z = _spawnPos.y;
-				_monsterPosition.y = Utility.FindTerrainHeight(_monsterPosition.x,_monsterPosition.z) + 0.5f;
-				
+				_monsterPosition.y = Utility.FindTerrainHeight(_monsterPosition.x,_monsterPosition.z, 0.25f);
+			
 				Bestiary.SpawnMonster(MonsterToSpawn,	_monsterPosition);
 			}
 		}
 		_nbrMonsterKilled = 0;
 	}
-	
-	/*public void SpawnMonster(Vector3 _monsterPosition)
-	{	
-		Bestiary.SpawnMonster(Bestiary.MonsterList[(int)MonsterName.Spider],	_monsterPosition);
-	}
-	*/
-	
-	/*public void SpawnSpiders(int[,] _mapRooms, int _sizeX, int _sizeZ)
-	{
-		Vector3 _monsterPosition = new Vector3();
-		Vector2 _spawnPos = FindRandomRoomPosition(_mapRooms, _sizeX, _sizeZ);
-		
-		_monsterPosition.x = _spawnPos.x;
-		_monsterPosition.z = _spawnPos.y;
-		_monsterPosition.y = Utility.FindTerrainHeight(_monsterPosition.x,_monsterPosition.z);
-		Bestiary.SpawnMonster(Bestiary.MonsterList[(int)MonsterName.Spider],	_monsterPosition);
-	}*/
 	
 	public void IniDungeon(int _sizeX, int _sizeZ)
 	{
@@ -247,8 +235,9 @@ public class DungeonManager : MonoBehaviour{
 	// Initiate, resize and Scan the pathfind GridGraph
 	public void IniPathfindGraph(int _sizeX, int _sizeZ)
 	{
+		_Astar = GameObject.FindGameObjectWithTag ("Astar").GetComponent<AstarPath>();
+		
 		GridGraph _Graph = AstarPath.active.astarData.gridGraph;
-		//AstarPath.active.graph
 		
 		_Graph.width = _sizeX;
 		_Graph.depth = _sizeZ;
@@ -256,6 +245,7 @@ public class DungeonManager : MonoBehaviour{
 		_Graph.UpdateSizeFromWidthDepth();
 		_Graph.Scan();
 		_Astar.Scan ();
+		AstarPath.active.Scan ();
 	}
 	
 	public void Abandon()
@@ -272,8 +262,17 @@ public class DungeonManager : MonoBehaviour{
 	
 	public void Win()
 	{
-		Debug.Log ("LVL : " + _GameManager.DungeonLevelToSpawn);
-		Character.GainInfluences(_GameManager.DungeonLevelToSpawn);
+		int _influenceGained;
+		if(_CurDungeonParameters.isHardcore == false)
+		{
+			_influenceGained = _GameManager.CurDungeonParameters.level;
+		}
+		else
+		{
+			_influenceGained = 5+ Mathf.RoundToInt(_GameManager.CurDungeonParameters.level*1.5f);	
+		}
+		Character.GainInfluences(_influenceGained);
+		
 		if(_curDungeonLevel == _GameManager.MaxDungeonLevel)
 		{
 			_GameManager.MaxDungeonLevel++;

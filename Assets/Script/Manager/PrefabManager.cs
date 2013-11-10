@@ -20,10 +20,13 @@ public class PrefabManager : MonoBehaviour {
 	public GameObject Monster_PseudoSpider;
 	public GameObject Monster_Spider;
 	public GameObject Monster_SpiderQueen;
+	public GameObject Monster_SkeletonToon;
+	public GameObject Monster_SkeletonFighter;
+	public GameObject Monster_SkeletonKing;
 	
-	public GameObject Item_RockSword;
-	public GameObject Item_RockAxe;
-	public GameObject Item_RockSpear;
+	public GameObject Weapon_RockSword;
+	public GameObject Weapon_RockAxe;
+	public GameObject Weapon_RockSpear;
 
 	public GameObject Spell_IceBolt;
 	public GameObject Spell_FireBat;

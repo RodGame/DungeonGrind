@@ -1,14 +1,27 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic; // For List class;
 using System;					  // For Enum
 
 
 static class SaveLoadSystem {
 	
+	public static List<BuildingInfo> LoadedBuildingInfo = new List<BuildingInfo>();
+	
+	public struct BuildingInfo
+	{
+		public int id;
+		public int buildingId;
+		public Vector3 Position;
+		public Quaternion Rotation;
+	}
+	
 	static GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	
 	static public void Save()
 	{
+		int _dummyForBool = 0;
+		
 		_GameManager.AddChatLogHUD ("[SAVE] Game was saved.");
 		
 		//Set Save Bool as true
@@ -19,6 +32,37 @@ static class SaveLoadSystem {
 		
 		//Save Character
 		PlayerPrefs.SetInt ("InfluencePoints", Character.InfluencePoints);
+		
+		// Save Inventory
+		for(int i = 0; i < ItemInventory.InventoryList.Length; i++)
+		{
+			if(ItemInventory.InventoryList[i].slotWeapon != null)
+			{
+				PlayerPrefs.SetInt   ("ItemSlot_isFull_" + i.ToString (), 1);
+				PlayerPrefs.SetInt   ("ItemSlot_ID_" + i.ToString (), ItemInventory.InventoryList[i].slotWeapon.IdWeapon);
+				PlayerPrefs.SetInt   ("ItemSlot_Level_" + i.ToString (), ItemInventory.InventoryList[i].slotWeapon.Level);
+				PlayerPrefs.SetFloat ("ItemSlot_CurExp_" + i.ToString (), ItemInventory.InventoryList[i].slotWeapon.CurExp);
+			}
+			else
+			{
+				PlayerPrefs.SetInt   ("ItemSlot_isFull_" + i.ToString (), 0);
+				//PlayerPrefs.SetInt ("ItemInventorySlot_" + i.ToString (), 0);
+			}
+		}
+		
+		// Save Equipped Item
+		if(ItemInventory.EquippedWeapon != null)
+		{
+			PlayerPrefs.SetInt   ("EquippedWeapon_isFull", 1);
+			PlayerPrefs.SetInt   ("EquippedWeapon_ID"    , ItemInventory.EquippedWeapon.IdWeapon);
+			PlayerPrefs.SetInt   ("EquippedWeapon_Level" , ItemInventory.EquippedWeapon.Level);
+			PlayerPrefs.SetFloat ("EquippedWeapon_CurExp", ItemInventory.EquippedWeapon.CurExp);
+		}
+		else
+		{
+			PlayerPrefs.SetInt   ("EquippedWeapon_isFull_", 0);
+		}
+		
 		
 		// Save Skills
 		for(int i = 0; i < Character.SkillList.Length; i++)
@@ -35,7 +79,6 @@ static class SaveLoadSystem {
 		}
 		
 		// Save Spells
-		
 		SpellName SpellIndex = (SpellName) Enum.Parse(typeof(SpellName), MagicBook.ActiveSpell.Name);
 		
 		PlayerPrefs.SetInt       ("ActiveSpell", (int)SpellIndex);  
@@ -54,22 +97,123 @@ static class SaveLoadSystem {
 			PlayerPrefs.SetFloat ("SpellRangeExp_" + Character.SpellList[i].Name, Character.SpellList[i].RangeCurExp);
 		}
 		
+		// Save Upgrades
+		for(int i = 0; i < DungeonLevelPool.DungeonUpgradeList.Length; i++)
+		{
+			int _isUnlocked = 0;
+			int _isEnabled  = 0;
+			
+			if(DungeonLevelPool.DungeonUpgradeList[i].IsUnlocked)
+			{
+				_isUnlocked = 1;
+			}
+			
+			if(DungeonLevelPool.DungeonUpgradeList[i].IsEnabled)
+			{
+				_isEnabled = 1;
+			}
+			PlayerPrefs.SetInt   ("DungeonUpgradeIsUnlocked_" + DungeonLevelPool.DungeonUpgradeList[i].Name, _isUnlocked);
+			PlayerPrefs.SetInt   ("DungeonUpgradeIsEnabled_"  + DungeonLevelPool.DungeonUpgradeList[i].Name, _isEnabled);
+		}
+		
+		// Save Killcount
+		for(int i = 0; i < Bestiary.MonsterList.Length; i++)
+		{
+			PlayerPrefs.SetInt   ("MonsterKillcount_" + Bestiary.MonsterList[i].Name, Bestiary.MonsterList[i].NbrKilled);	
+		}
+		
+		// Save Current Dungeon Setting
+		PlayerPrefs.SetInt   ("CurDungeonLevel", _GameManager.CurDungeonParameters.level);	
+		if(_GameManager.CurDungeonParameters.isHardcore)
+		{
+			_dummyForBool = 1;
+		}
+		PlayerPrefs.SetInt   ("CurDungeonIsHardcore", _dummyForBool);
+		
+		if(_GameManager.CurDungeonParameters.isWave)
+		{
+			_dummyForBool = 1;
+		}
+		PlayerPrefs.SetInt   ("CurDungeonIsWave", _dummyForBool);	
+		
+		if(Application.loadedLevelName == "Camp")
+		{
+			SaveBuildings();
+		}
+	}
+	
+	static public void SaveBuildings()
+	{
+		Debug.Log ("Saved " + BuildSystem.CreatedBuildingList.Count + " Buildings");
+		
+		// Save Building created
+		PlayerPrefs.SetInt("BuildingCreated_numberBuilding", BuildSystem.CreatedBuildingList.Count);
+		for(int i = 0; i < BuildSystem.CreatedBuildingList.Count; i++)
+		{
+			BuildingManager _BuildingManager = BuildSystem.CreatedBuildingList[i].GetComponent<BuildingManager>();
+			
+			PlayerPrefs.SetInt("BuildingCreated_" + i + "_id", _BuildingManager.buildingId);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_positionX", BuildSystem.CreatedBuildingList[i].transform.position.x);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_positionY", BuildSystem.CreatedBuildingList[i].transform.position.y);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_positionZ", BuildSystem.CreatedBuildingList[i].transform.position.z);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationX", BuildSystem.CreatedBuildingList[i].transform.rotation.x);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationY", BuildSystem.CreatedBuildingList[i].transform.rotation.y);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationZ", BuildSystem.CreatedBuildingList[i].transform.rotation.z);
+			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationW", BuildSystem.CreatedBuildingList[i].transform.rotation.w);	
+		}	
 	}
 	
 	static public void Load()
 	{
 		
-		
 		if(PlayerPrefs.GetInt ("IsSaveExist") == 1) //If save exist
 		{
 			
-			//Load GameManager
+			// Load GameManager
 			_GameManager.MaxDungeonLevel = PlayerPrefs.GetInt ("MaxDungeonLevel");
 			
-			//Load Character
+			// Load Character
 			Character.InfluencePoints = PlayerPrefs.GetInt ("InfluencePoints");
 			
-			//Load Skills
+			int   _curWeaponId;
+			int   _curWeaponLevel;
+			float _curWeaponCurExp;
+				
+			// Load Inventory
+			for(int i = 0; i < ItemInventory.InventoryList.Length; i++)
+			{
+				if(PlayerPrefs.GetInt   ("ItemSlot_isFull_" + i.ToString ()) == 1) // If there is an item saved in the slot
+				{
+					_curWeaponId     = PlayerPrefs.GetInt   ("ItemSlot_ID_"    + i.ToString ());
+					_curWeaponLevel  = PlayerPrefs.GetInt   ("ItemSlot_Level_" + i.ToString ());
+					_curWeaponCurExp = PlayerPrefs.GetFloat ("ItemSlot_CurExp_" + i.ToString ());
+					ItemInventory.AddItem (_curWeaponId, _curWeaponLevel, _curWeaponCurExp);
+				}
+				else
+				{
+					ItemInventory.InventoryList[i].isSlotFull = false;
+					ItemInventory.InventoryList[i].slotWeapon = null;
+					ItemInventory.InventoryList[i].slotCount  = 0;
+				}
+			}
+			
+			// Load Equipped Item
+			if(PlayerPrefs.GetInt("EquippedWeapon_isFull") == 1) // If there is a saved equipped item
+			{
+				PlayerPrefs.GetInt   ("EquippedWeapon_isFull", 1);
+				_curWeaponId     = PlayerPrefs.GetInt   ("EquippedWeapon_ID");
+				_curWeaponLevel  = PlayerPrefs.GetInt   ("EquippedWeapon_Level");
+				_curWeaponCurExp = PlayerPrefs.GetFloat ("EquippedWeapon_CurExp");
+				ItemInventory.EquipWeapon (_curWeaponId, _curWeaponLevel, _curWeaponCurExp);
+				
+			}
+			else
+			{
+				ItemInventory.EquipWeapon(null);
+			}
+			
+			
+			// Load Skills
 			for(int i = 0; i < Character.SkillList.Length; i++)
 			{
 				Character.SkillList[i].Level  = PlayerPrefs.GetInt ("SkillLvl_" + Character.SkillList[i].Name);
@@ -102,9 +246,65 @@ static class SaveLoadSystem {
 			MagicBook.UpdateSpellStats();
 			MagicBook.ActiveSpell = Character.SpellList[(int)(SpellName)PlayerPrefs.GetInt("ActiveSpell")];  
 			
+			
+			// Load Upgrades
+			for(int i = 0; i < DungeonLevelPool.DungeonUpgradeList.Length; i++)
+			{
+				DungeonLevelPool.DungeonUpgradeList[i].IsUnlocked = (PlayerPrefs.GetInt("DungeonUpgradeIsUnlocked_" + DungeonLevelPool.DungeonUpgradeList[i].Name) == 1);
+				DungeonLevelPool.DungeonUpgradeList[i].IsEnabled  = (PlayerPrefs.GetInt("DungeonUpgradeIsEnabled_"  + DungeonLevelPool.DungeonUpgradeList[i].Name) == 1);
+			}
+			
+			// Load Killcount
+			for(int i = 0; i < Bestiary.MonsterList.Length; i++)
+			{
+				Bestiary.MonsterList[i].NbrKilled = PlayerPrefs.GetInt   ("MonsterKillcount_" + Bestiary.MonsterList[i].Name);	
+			}
+			
+			// Load Curren Dungeon Setting(Not working perfectly)
+			
+			// PlayerHUD.DungeonParameters _SavedDungeonParameters;
+			//_SavedDungeonParameters.level      = PlayerPrefs.GetInt   ("CurDungeonLevel");
+			//_SavedDungeonParameters.isHardcore = (PlayerPrefs.GetInt   ("CurDungeonIsHardcore") == 1);
+			///_SavedDungeonParameters.isWave     = (PlayerPrefs.GetInt   ("CurDungeonIsWave") == 1);
+			
+			//_GameManager.CurDungeonParameters = _SavedDungeonParameters;
+			
+			LoadBuildings();
+			
 		}
-		
-		
 	}
 	
+	static public void LoadBuildings()
+	{
+		if(PlayerPrefs.GetInt ("IsSaveExist") == 1) //If save exist
+		{
+			// Load Building created
+			BuildingInfo _DummyBuildingInfo = new BuildingInfo();
+			LoadedBuildingInfo = new List<BuildingInfo>();
+			
+			int _numberBuilding = PlayerPrefs.GetInt("BuildingCreated_numberBuilding");
+			Debug.Log ("Loaded " + _numberBuilding + " Buildings");
+			for(int i = 0; i < _numberBuilding; i++)
+			{
+				int   _dummyId   = PlayerPrefs.GetInt("BuildingCreated_" + i + "_id");
+				
+				float _dummyPosX = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_positionX");
+				float _dummyPosY = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_positionY");
+				float _dummyPosZ = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_positionZ");
+				
+				float _dummyRotX = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_rotationX");
+				float _dummyRotY = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_rotationY");
+				float _dummyRotZ = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_rotationZ");
+				float _dummyRotW = PlayerPrefs.GetFloat("BuildingCreated_" + i + "_rotationW");
+				
+				_DummyBuildingInfo.id = i;
+				_DummyBuildingInfo.buildingId = _dummyId;
+				_DummyBuildingInfo.Position = new Vector3(_dummyPosX, _dummyPosY, _dummyPosZ);
+				_DummyBuildingInfo.Rotation = new Quaternion(_dummyRotX, _dummyRotY, _dummyRotZ, _dummyRotW);
+				
+				
+				LoadedBuildingInfo.Add (_DummyBuildingInfo);
+			}
+		}
+	}
 }
