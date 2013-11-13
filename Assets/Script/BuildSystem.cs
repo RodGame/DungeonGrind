@@ -8,11 +8,15 @@ static class BuildSystem {
 	static GameManager   _GameManager   = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	static PrefabManager _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	static GameObject    _Player        = GameObject.FindGameObjectWithTag("Player");
-	static public GameObject ActiveBuilding;
-	static int _buildState; //0 = No build, 1 = Currently Building, 2 = Built
+	static private GameObject _ActiveBuilding;
+	static private int _buildState; //0 = No build, 1 = Currently Building, 2 = Built
 	// Structure that contain the position of the start/end of a wall to be created
 	static public List<GameObject> CreatedBuildingList = new List<GameObject>();
 	
+	static public GameObject ActiveBuilding
+	{ 
+		get {return _ActiveBuilding; }
+	}
 	
 	static public int BuildState
 	{ 
@@ -31,12 +35,9 @@ static class BuildSystem {
 		if(CraftSystem.TestRessource(_buildingRessourceNeeded) == true) //Test if all ressources are available
 		{
 			EnterBuildMode(_BuildingToBuild);
-			_GameManager.ChangeState("Play");	
-			
 			
 			_BuildingToBuild.NbrBuilt++;
 			CraftSystem.SpendRessource(_buildingRessourceNeeded);
-			 _GameManager.AddChatLogHUD("[BUIL] " + _BuildingToBuild.Name + " has been built");
 			Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Crafter],50);
 		}
 	}
@@ -51,25 +52,16 @@ static class BuildSystem {
 		float	_distToBuild = 5.0f;;
 		GameObject CreatedBuilding;
 		
-		_buildState = 1;
-		_GameManager.ChangeState("Build");	
-		
 		_OffsetToAdd      = _PlayerTransform.forward * _distToBuild;
 		_BuildingPosition = _PlayerTransform.position + _OffsetToAdd;
 		_BuildingRotation = _PlayerTransform.rotation * Quaternion.Euler(0, -90, 0);
 		
 		// Instantiate and initialize the new object
 		CreatedBuilding = SpawnBuilding(_newBuilding.Id, _BuildingPosition, _BuildingRotation);
-		CreatedBuilding.transform.parent = _Player.transform;
 		UpdateBuildingInfo(CreatedBuilding, CreatedBuildingList.Count, _newBuilding.Id);
-		//Debug.Log ("Created build at " + CreatedBuildingList.Count + " Position");
 		CreatedBuildingList.Add(CreatedBuilding);
 		
-		
-		
-		ActiveBuilding = CreatedBuilding; // Switch the active building to the created building
-		
-		_buildState = 1;
+		CreatedBuilding.GetComponent<BuildingManager>().ActivateBuilding ();
 		
 	}
 	

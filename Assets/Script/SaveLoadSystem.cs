@@ -7,7 +7,7 @@ using System;					  // For Enum
 static class SaveLoadSystem {
 	
 	public static List<BuildingInfo> LoadedBuildingInfo = new List<BuildingInfo>();
-	
+	static GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	public struct BuildingInfo
 	{
 		public int id;
@@ -15,8 +15,6 @@ static class SaveLoadSystem {
 		public Vector3 Position;
 		public Quaternion Rotation;
 	}
-	
-	static GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	
 	static public void Save()
 	{
@@ -140,6 +138,8 @@ static class SaveLoadSystem {
 		{
 			SaveBuildings();
 		}
+		
+		GameAnalyticsManager.SendDatas();
 	}
 	
 	static public void SaveBuildings()

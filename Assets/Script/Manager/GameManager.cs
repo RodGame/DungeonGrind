@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour {
 	private float _curProgress = 0;
 	private string _curAction = "None";
 	private string _curZone   = "Camp";
-	private string _curState; //Menu, Play, Talk
+	public string _curState; //Menu, Play, Talk
 	private int    _discussionStep = 0;
 	private PlayerHUD.DungeonParameters _CurDungeonParameters;
 	private List<string> _discussionListString = new List<string>();
@@ -28,8 +28,6 @@ public class GameManager : MonoBehaviour {
 	{
 		get {return _curState; }
 	}
-	
-	
 	
 	public float CurProgress
 	{
@@ -116,11 +114,6 @@ public class GameManager : MonoBehaviour {
 					_discussionStep = 0;
 				}
 			}
-		}
-		
-		if(BuildSystem.BuildState != 0)
-		{
-			BuildSystem.ActiveBuilding.GetComponent<BuildingManager>().ControlBuilding();
 		}
 		
 		//Regenerate Mana for character
@@ -364,7 +357,7 @@ public class GameManager : MonoBehaviour {
 	{
 		if(_curState == "Play")
 		{
-			_PlayerHUD.ChangeBoxView ("DungeonMenu");
+			_PlayerHUD.ChangeBoxView("DungeonMenu");
 		}
 	}
 	
@@ -439,6 +432,8 @@ public class GameManager : MonoBehaviour {
 			Screen.lockCursor = true;
 			_PlayerHUD.isDisplayCursor = false;
 			_Player.GetComponent<CharacterController>().enabled = false;
+			_Player.GetComponent<MouseLook>().enabled = true;
+			_PlayerCam.GetComponent<MouseLook>().enabled = true;
 		}
 		else if(_newState == "Build")
 		{
@@ -446,6 +441,8 @@ public class GameManager : MonoBehaviour {
 			Screen.lockCursor = true;
 			_PlayerHUD.isDisplayCursor = false;
 			_Player.GetComponent<CharacterController>().enabled = true;
+			_Player.GetComponent<MouseLook>().enabled = true;
+			_PlayerCam.GetComponent<MouseLook>().enabled = true;
 		}
 		else
 		{
@@ -466,12 +463,21 @@ public class GameManager : MonoBehaviour {
 	{
 		if(BuildSystem.BuildState == 0)
 		{
-			if(_collidedObj != null)
+			// If equipped item is an hammer, start the building creation. Else, interact with the object.
+			if(ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp")
+			{
+				_PlayerHUD.ChangeBoxView("BuildList");
+			}
+			else if(_collidedObj != null)
 			{
 				float _distanceInteraction = 5.0f;
 				if(ItemInventory.EquippedWeapon != null)
 				{
 					_distanceInteraction = ItemInventory.EquippedWeapon.Range;
+				}
+				else
+				{
+					_distanceInteraction = 4.5f;
 				}
 				
 				if(Vector3.Distance(_collidedObj.transform.position, _Player.transform.position) <= _distanceInteraction)
@@ -606,6 +612,27 @@ public class GameManager : MonoBehaviour {
 					Debug.LogWarning ("No Item in GameManager");
 					break;
 			}
+		}
+	}
+	
+	public void RightClick(Collider _collidedObj)
+	{
+		float distanceBuild = 7.0f;
+		//BuildingManager _BuildingManager;
+		if(ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && Application.loadedLevelName == "Camp")
+		{
+			// Test for a BuildingManager component to identify building.
+			if(_collidedObj != null)
+			{
+				if(_collidedObj.gameObject.GetComponent<BuildingManager>() != null && Vector3.Distance (_Player.transform.position, _collidedObj.transform.position) < distanceBuild)
+				{
+					_collidedObj.gameObject.GetComponent<BuildingManager>().ActivateBuilding();
+				}
+			}			
+		}
+		else
+		{
+			MagicBook.CastSpell(MagicBook.ActiveSpell);	
 		}
 	}
 	

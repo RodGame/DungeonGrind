@@ -84,6 +84,14 @@ public class MenuManager : MonoBehaviour {
 	{
 		PlayerPrefs.DeleteAll();
 		ItemInventory.EquipWeapon (Inventory.WeaponList[(int)WeaponName.RockSword]);
+		ItemInventory.AddItem(Inventory.WeaponList[(int)WeaponName.Hammer]);
+		if(Input.GetKey(KeyCode.LeftShift))
+		{
+			_GameManager.MaxDungeonLevel = 20;
+			Character.InfluencePoints = 500;
+			Inventory.RessourceList[(int)RessourceName.Wood].CurValue = 1000;
+			Inventory.RessourceList[(int)RessourceName.Coin].CurValue = 1000;
+		}
 		StartGame();
 		
 	}

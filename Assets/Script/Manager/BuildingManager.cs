@@ -7,7 +7,8 @@ public class BuildingManager : MonoBehaviour {
 	public int buildingId;
 	private GameManager _GameManager;
 	private GameObject _Player;
-	private bool _isObjectColliding = false;
+	public bool _isObjectColliding = false;
+	public bool _isObjectActive    = false;
 	
 	// Use this for initialization
 	void Awake () {
@@ -18,7 +19,53 @@ public class BuildingManager : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 		_isObjectColliding = false;
+		
+		if(_isObjectActive == true)
+		{
+			
+		}
 	}	
+	
+	void Update()
+	{
+		if(_isObjectActive == true)
+		{
+			ControlBuilding();
+			ColorBuilding();
+			TestInput();
+		}
+	}
+	
+	void ColorBuilding()
+	{
+		if(_isObjectColliding == true)
+		{
+			gameObject.renderer.material.color = Color.red;	
+			Debug.Log ("Red Colliding");
+		}
+		else
+		{
+			gameObject.renderer.material.color = Color.green;	
+		}	
+	}
+	
+	void TestInput()
+	{
+		// Test for drop of building
+		if(Input.GetMouseButtonDown(0))
+		{
+			Debug.Log ("On click, Collision  : " + _isObjectColliding);
+			if(_isObjectColliding == false)
+			{
+				ReleaseBuilding();
+				_GameManager.AddChatLogHUD("[BUIL] " + name + " has been built");
+			}
+			else
+			{
+				_GameManager.AddChatLogHUD("[BUIL] Building can't be placed there");	
+			}
+		}	
+	}
 	
 	void OnCollisionStay(Collision _Collision)
 	{
@@ -28,25 +75,23 @@ public class BuildingManager : MonoBehaviour {
 		}
 	}
 	
+	public void ActivateBuilding()
+	{
+		transform.parent = _Player.transform;
+		_GameManager.ChangeState("Build");	
+		BuildSystem.BuildState = 1;
+		_isObjectActive = true;
+	}
+	
 	public void ControlBuilding()
 	{
 		float _rotaSpeed = 2.0f;
-		float _moveSpeed = 0.5f;
-		float _newPosX = BuildSystem.ActiveBuilding.transform.position.x;
-		float _newPosZ = BuildSystem.ActiveBuilding.transform.position.z;
-		float _newPosY = Utility.FindTerrainHeight(_newPosX, _newPosZ,-0.5f);
+		float _moveSpeed = 0.3f;
+		float _newPosX = transform.position.x;
+		float _newPosZ = transform.position.z;
+		float _newPosY = Utility.FindTerrainHeight(_newPosX, _newPosZ,-0.75f);
 		
-		transform.position = new Vector3(_newPosX, _newPosY, _newPosZ);
-		
-		if(_isObjectColliding == true)
-		{
-			gameObject.renderer.material.color = Color.red;	
-		}
-		else
-		{
-			gameObject.renderer.material.color = Color.green;	
-		}
-		
+		transform.position = new Vector3(_newPosX, _newPosY, _newPosZ);	
 		
 		// Test for inputs
 		if(Input.GetKey(KeyCode.Q))
@@ -75,24 +120,17 @@ public class BuildingManager : MonoBehaviour {
 		{
 			DestroyBuilding();
 		} 
+	}
+	
+	private void ReleaseBuilding()
+	{
+		Debug.Log ("Object Released");
+		_isObjectActive = false;
+		gameObject.renderer.material.color = Color.white;
+		transform.parent = null;
+		BuildSystem.BuildState = 0;
+		_GameManager.ChangeState("Play");
 		
-		// Test for drop of building
-		if(Input.GetMouseButtonDown(0))
-		{
-			if(_isObjectColliding == false)
-			{
-				gameObject.renderer.material.color = Color.white;
-				transform.parent = null;
-				BuildSystem.BuildState = 0;
-				_GameManager.ChangeState("Play");
-				
-			}
-			else
-			{
-				_GameManager.AddChatLogHUD("[BUIL] Building can't be placed there");	
-			}
-			
-		}
 	}
 	
 	private void DestroyBuilding()
@@ -100,8 +138,8 @@ public class BuildingManager : MonoBehaviour {
 		Debug.Log ("Destroyed Item");
 		BuildSystem.CreatedBuildingList.Remove(gameObject);
 		BuildSystem.BuildState = 0;
-		BuildSystem.ActiveBuilding = null;
 		GameObject.Destroy(gameObject);
+		_GameManager.ChangeState("Play");
 	}
 	
 	

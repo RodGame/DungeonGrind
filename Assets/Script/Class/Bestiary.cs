@@ -32,7 +32,7 @@ static class Bestiary {
 				MonsterList[i].AttackCd      = 1.0f;
 				MonsterList[i].AttackRange   = 3.0f;
 				MonsterList[i].SightRange    = 20;
-				MonsterList[i].MoveSpeed     = 325;
+				MonsterList[i].MoveSpeed     = 280;
 				MonsterList[i].SkillReward   = 1.0f;
 				MonsterList[i].Size          = 1.0f;
 				//MonsterList[i].Height        = 0.55f;
@@ -65,7 +65,7 @@ static class Bestiary {
 			}
 			else if(MonsterList[i].Name == "SpiderQueen")
 			{
-				MonsterList[i].Loot          = "[RESS]1*Coin";               //TODO [DROP] With droppable item
+				MonsterList[i].Loot          = "[RESS]1*Coin"; //TODO [DROP] With droppable item
 				MonsterList[i].Hp            = 175;
 				MonsterList[i].Damage        = 35;
 				//MonsterList[i].SpawnCd       = 1.0f;

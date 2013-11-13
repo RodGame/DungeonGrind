@@ -18,7 +18,7 @@
 	<DebugType>full</DebugType>
 	<Optimize>false</Optimize>
 	<OutputPath>Temp\bin\Debug\</OutputPath>
-	<DefineConstants>DEBUG;TRACE;UNITY_WEBPLAYER;WEBPLUG;ENABLE_MICROPHONE;ENABLE_IMAGEEFFECTS;ENABLE_WEBCAM;ENABLE_AUDIO_FMOD;ENABLE_NETWORK;ENABLE_MONO;ENABLE_PHYSICS;ENABLE_TERRAIN;ENABLE_CACHING;ENABLE_SUBSTANCE;ENABLE_GENERICS;ENABLE_CLOTH;ENABLE_MOVIES;ENABLE_AUDIO;ENABLE_WWW;ENABLE_SHADOWS;ENABLE_DUCK_TYPING;UNITY_4_0_1;UNITY_4_0;ENABLE_PROFILER;UNITY_EDITOR</DefineConstants>
+	<DefineConstants>DEBUG;TRACE;UNITY_STANDALONE_WIN;ENABLE_MICROPHONE;ENABLE_TEXTUREID_MAP;ENABLE_AUDIO_FMOD;UNITY_STANDALONE;ENABLE_MONO;ENABLE_TERRAIN;ENABLE_SUBSTANCE;ENABLE_GENERICS;ENABLE_MOVIES;ENABLE_WWW;ENABLE_IMAGEEFFECTS;ENABLE_WEBCAM;RENDER_SOFTWARE_CURSOR;ENABLE_NETWORK;ENABLE_PHYSICS;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_SHADOWS;ENABLE_AUDIO;ENABLE_DUCK_TYPING;ENABLE_SINGLE_INSTANCE_BUILD_SETTING;UNITY_4_2_2;UNITY_4_2;ENABLE_PROFILER;UNITY_EDITOR;UNITY_EDITOR_WIN</DefineConstants>
 	<ErrorReport>prompt</ErrorReport>
 	<WarningLevel>4</WarningLevel>
 	<NoWarn>0169</NoWarn>
@@ -50,19 +50,28 @@
      <Compile Include="Assets\Standard Assets\Character Controllers\Sources\Scripts\ThirdPersonCamera.js" />
      <Compile Include="Assets\Standard Assets\Character Controllers\Sources\Scripts\ThirdPersonController.js" />
      <None Include="Assets\Script\AstarPathfindingProject\Editor\EditorAssets\Materials\Navmesh2.shader" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\Framework\Shaders\GA_HeatMapSolidOverlay.shader" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\Framework\Shaders\GA_HeatMapTransparentOverlay.shader" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\Framework\Shaders\GA_HeatMapSolid.shader" />
      <None Include="Assets\Script\AstarPathfindingProject\Plugins\DotNetZip\License.txt" />
      <None Include="Assets\Script\AstarPathfindingProject\ExampleScenes\Materials\Projector Multiply.shader" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\Framework\Shaders\GA_HeatMapTransparent.shader" />
      <None Include="Assets\Standard Assets\Skyboxes\_skybox info.txt" />
      <None Include="Assets\Script\AstarPathfindingProject\ExampleScenes\Materials\DiffuseAlwaysVisible.shader" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\Android\AndroidManifest.xml" />
      <None Include="Assets\Script\AstarPathfindingProject\Editor\EditorAssets\Materials\Navmesh.shader" />
      <None Include="Assets\Script\AstarPathfindingProject\Plugins\dependencies.txt" />
      <None Include="Assets\Script\AstarPathfindingProject\ExampleScenes\_Example Scenes.txt" />
      <None Include="Assets\SpartanKing\animations.txt" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\WebPlayer\Readme_WebPlayer.txt" />
      <None Include="Assets\Script\TOCONSIDER.txt" />
      <None Include="Assets\Script\AstarPathfindingProject\Readme_upgrading.txt" />
      <None Include="Assets\External Assets\Creatures\Skeleton\Model\N-Materials\Bumped Anisotropic Specular.shader" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\Android\Android_Readme.txt" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\iOS\iOS_Readme.txt" />
      <None Include="Assets\Script\AstarPathfindingProject\ExampleScenes\Materials\Projector Light.shader" />
      <None Include="Assets\Script\AstarPathfindingProject\Readme.txt" />
+     <None Include="Assets\Script\GameAnalytics\Plugins\WebPlayer\crossdomain.xml" />
      <None Include="Assets\Script\AstarPathfindingProject\Plugins\JsonFx\License.txt" />
      <None Include="Assets\Script\AstarPathfindingProject\Plugins\JsonFx\Readme.txt" />
      <None Include="Assets\Script\TODO.txt" />

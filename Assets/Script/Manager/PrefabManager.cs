@@ -27,6 +27,8 @@ public class PrefabManager : MonoBehaviour {
 	public GameObject Weapon_RockSword;
 	public GameObject Weapon_RockAxe;
 	public GameObject Weapon_RockSpear;
+	public GameObject Weapon_SimpleHammer1;
+	public GameObject Weapon_SimpleHammer2;
 
 	public GameObject Spell_IceBolt;
 	public GameObject Spell_FireBat;

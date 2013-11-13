@@ -87,6 +87,7 @@ static class Inventory {
 				WeaponList[i].IsUnlocked  = true;
 				WeaponList[i].Recipe      = "5*Wood+2*Rock";
 				WeaponList[i].ItemIcon    = _TextureManager.Texture_RockHammer;
+				WeaponList[i].ItemPrefab  = _PrefabManager.Weapon_SimpleHammer2;
 				WeaponList[i].BaseDamage     = 1;
 				WeaponList[i].DamagePerLevel = 0.5f;
 				WeaponList[i].BaseSpeed      = 125f;

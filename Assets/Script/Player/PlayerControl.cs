@@ -62,12 +62,14 @@ public class PlayerControl : MonoBehaviour {
 			}
 			else
 			{
-				_GameManager.RaycastAnalyze(null);	
+				_GameManager.RaycastAnalyze(null);
 			}
 		}
 		else if(Input.GetMouseButtonDown(mouseRightButton))
 		{
-			MagicBook.CastSpell(MagicBook.ActiveSpell);
+			_ray = _PlayerCam.ScreenPointToRay(new Vector3(_PlayerCam.pixelWidth/2,_PlayerCam.pixelHeight/2,0));
+			Physics.Raycast (_ray,out _hitInfo);
+			_GameManager.RightClick(_hitInfo.collider);
 		}
 	}
 	
