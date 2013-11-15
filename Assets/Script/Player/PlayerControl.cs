@@ -88,7 +88,7 @@ public class PlayerControl : MonoBehaviour {
 		else if(Input.GetKeyDown(KeyCode.F7) || Input.GetKeyDown(KeyCode.M)){_PlayerHUD.SwitchBoxFromKeys("F7");}      //Map
 		else if(Input.GetKeyDown(KeyCode.F8))                               {_PlayerHUD.SwitchBoxFromKeys("F8");}      //Abandon
 		else if(Input.GetKeyDown(KeyCode.F9) || Input.GetKeyDown(KeyCode.O)){_PlayerHUD.SwitchBoxFromKeys("F9");}      //Save
-		else if(Input.GetKeyDown(KeyCode.F10)){_PlayerHUD.SwitchBoxFromKeys("F10");}
+		else if(Input.GetKeyDown(KeyCode.F10) || Input.GetKeyDown(KeyCode.H)){_PlayerHUD.SwitchBoxFromKeys("F10");}
 		else if(Input.GetKeyDown(KeyCode.F11)){_PlayerHUD.SwitchBoxFromKeys("F11");}
 		else if(Input.GetKeyDown(KeyCode.F12)){_PlayerHUD.SwitchBoxFromKeys("F12");}
 		//else if(Input.GetKeyDSwitchBoxFromKeysect.FindGameObjectWithTag("Spartan").animation.animation.CrossFade("run");} 

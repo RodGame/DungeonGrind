@@ -52,7 +52,6 @@ static class MagicBook {
 	
 	static private void CastIceBoltAnimation()
 	{
-		GameObject _GO_Spell;
 		float _distanceFromCamera = 1.5f;
 		
 		Vector3 SpawnPosition = Camera.mainCamera.transform.position + Camera.mainCamera.transform.forward*_distanceFromCamera;
@@ -72,8 +71,7 @@ static class MagicBook {
 			
 			
 		_GO_Spell = GameObject.Instantiate (_PrefabManager.Spell_FireBat, SpawnPosition, SpawnQuaternion) as GameObject;
-		
-		_GO_Spell.transform.parent = GameObject.FindGameObjectWithTag("Player").transform;
+		_GO_Spell.transform.parent = Camera.main.transform;
 	}
 	
 	static public void UpdateSpellStats()

@@ -3,7 +3,8 @@ using System.Collections;
 using System; // For Enum class;
 static class Character {
 	
-	static private TextureManager _TextureManager =  GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
+	private static  TextureManager _TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
+	private static  GameManager    _GameManager    = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	
 	private static int _baseHP     = 80;
 	private static int _maxHP      = _baseHP;
@@ -23,7 +24,8 @@ static class Character {
 	private static int _regenValue = 2;
 	private static int _influencePoints = 0;
 	
-	private static GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
+	private static Task _activeTask;
+	
 	public static Stat[] StatList;
 	public static Skill[] SkillList;
 	public static Task[] TaskList;
@@ -63,9 +65,15 @@ static class Character {
 		get {return _influencePoints; }
 		set {_influencePoints = value; }
 	}
+	static public Task ActiveTask
+	{
+		get {return _activeTask; }
+		set {_activeTask = value; }
+	}
 	
-	//public static Task ActiveTask = TaskList[(int)TaskName.Spartan0];
-	public static Task ActiveTask;
+	
+	//public static Task ActiveTask = TaskList[(int)TaskName.TaskIntro];
+	
 	
 	public static void IniCharacter()
 	{
@@ -172,23 +180,19 @@ static class Character {
 			
 			TaskList[i] = new Task();
 			
-			if(_taskName == "Spartan0")
+			if(_taskName == "TaskIntro")
 			{
 				TaskList[i].Name = _taskName;	
 				TaskList[i].Definition = "Talk to Spartan to obtain your first quest.";
 				TaskList[i].Requirement = "None";				
-				TaskList[i].Reward = "[ITEM]1*Hammer";
-				TaskList[i].IsUnlocked = true;
-				TaskList[i].IsFinished = false;
+				TaskList[i].Reward = "None";
 			}
 			else if(_taskName == "Spartan1")
 			{
 				TaskList[i].Name = _taskName;
 				TaskList[i].Definition = "Repair the wooden cart behind Spartan";
 				TaskList[i].Requirement = "None"; //TODO Add Misc requirements
-				TaskList[i].Reward = "[DISS]Spartan";
-				TaskList[i].IsUnlocked = false;
-				TaskList[i].IsFinished = false;
+				TaskList[i].Reward = "[RESS]50*Wood";
 			}
 			else if(_taskName == "Spartan2")
 			{
@@ -196,28 +200,21 @@ static class Character {
 				TaskList[i].Definition = "Build a crafting table";
 				TaskList[i].Requirement = "[BUIL]1*CraftingTable";
 				TaskList[i].Reward = "[DISS]Spartan";
-				TaskList[i].IsUnlocked = false;
-				TaskList[i].IsFinished = false;
 			}
 			else if(_taskName == "Spartan3")
 			{
 				TaskList[i].Name = _taskName;
-				TaskList[i].Definition = "Craft an Axe and Pickaxe and gather 10 Rock and 10 Wood";
+				TaskList[i].Definition = "No quest yet. Go play in dungeon!";
 				TaskList[i].Requirement = "[CRAF]1*RockAxe+1*RockPickaxe,[RESS]10*Rock+10*Wood";
 				TaskList[i].Reward = "[DISS]Spartan,[RESS]15*Coin";
-				TaskList[i].IsUnlocked = false;
-				TaskList[i].IsFinished = false;
 			}
-			else if(_taskName == "Spartan4")
+			/*else if(_taskName == "Spartan4")
 			{
 				TaskList[i].Name = _taskName;
 				TaskList[i].Definition = "Buy a Sword";
 				TaskList[i].Requirement = "[RESC]15*Coin";
 				TaskList[i].Reward = "[ITEM]1*RockSword";
-				TaskList[i].IsUnlocked = false;
-				TaskList[i].IsFinished = false;
-			}
-			
+			}*/
 		}
 	}
 	
@@ -337,25 +334,24 @@ static class Character {
 		
 	}
 	
-	public static void UnlockTask(Task _TaskToUnlock)
+	public static void ActivateTask(Task _TaskToUnlock)
 	{
-		_TaskToUnlock.IsUnlocked = true;
-		Character.ActiveTask = _TaskToUnlock;
+		_activeTask = _TaskToUnlock;
 	}
 	
-	public static void FinishTask(Task _TaskToFinish)
+	/*public static void FinishTask(Task _TaskToFinish)
 	{
 		_TaskToFinish.IsFinished = true;
-		if(Character.ActiveTask == _TaskToFinish)
+		if(_activeTask == _TaskToFinish)
 		{
-			Character.ActiveTask = null;
+			_activeTask = null;
 		}
-		Character.ActiveTask = _TaskToFinish;
-	}
+		_activeTask = _TaskToFinish;
+	}*/
 	
 	public static void SetActiveTask(Task _TaskToActive)
 	{
-		Character.ActiveTask = _TaskToActive;
+		_activeTask = _TaskToActive;
 	}
 	
 	public static void LoseHp(int _hpToLose)

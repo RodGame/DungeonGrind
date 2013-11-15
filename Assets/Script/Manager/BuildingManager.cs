@@ -124,12 +124,15 @@ public class BuildingManager : MonoBehaviour {
 	
 	private void ReleaseBuilding()
 	{
-		Debug.Log ("Object Released");
-		_isObjectActive = false;
-		gameObject.renderer.material.color = Color.white;
-		transform.parent = null;
-		BuildSystem.BuildState = 0;
-		_GameManager.ChangeState("Play");
+		if(_GameManager.CurState == "Build")
+		{
+			Debug.Log ("Object Released");
+			_isObjectActive = false;
+			gameObject.renderer.material.color = Color.white;
+			transform.parent = null;
+			BuildSystem.BuildState = 0;
+			_GameManager.ChangeState("Play");
+		}
 		
 	}
 	

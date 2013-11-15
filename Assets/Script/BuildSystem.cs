@@ -13,6 +13,9 @@ static class BuildSystem {
 	// Structure that contain the position of the start/end of a wall to be created
 	static public List<GameObject> CreatedBuildingList = new List<GameObject>();
 	
+	static private Vector3 _CartPosition = new Vector3(1.0f, -1.25f, -12.5f);
+	static private Quaternion _CartRotation = Quaternion.Euler (270.0f, 250.0f, 0.0f);
+	
 	static public GameObject ActiveBuilding
 	{ 
 		get {return _ActiveBuilding; }
@@ -79,6 +82,39 @@ static class BuildSystem {
 			Debug.LogWarning("Wrong Gameobject was updated");	
 		}
 	}
+	
+	public static void SpawnCart()
+	{
+		if(Character.TaskList[(int)TaskName.Spartan1].IsFinished || (Character.TaskList[(int)TaskName.Spartan1].IsUnlocked && !Character.TaskList[(int)TaskName.Spartan1].IsFinished && SaveLoadSystem.Spartan_TaskState > 1))
+		{
+			SpawnCart("Cart");
+		}
+		else
+		{
+			SpawnCart("CartBroken");
+		}
+	}
+	
+	public static void SpawnCart(string _Type)
+	{
+		GameObject _GO;
+		
+		if(_Type == "Cart")
+		{
+			_GO = GameObject.Instantiate(_PrefabManager.Environment_Cart,_CartPosition,_CartRotation) as GameObject;
+			_GO.name = "Cart";
+		}
+		else if(_Type == "CartBroken")
+		{
+			_GO = GameObject.Instantiate(_PrefabManager.Environment_CartBroken,_CartPosition,_CartRotation) as GameObject;
+			_GO.name = "CartBroken";
+		}
+		else
+		{
+			Debug.LogWarning("Tried to spawn a wrong Cart in BuildSystem/SpawnCart");	
+		}
+	}
+	
 	
 	// Function used when reentering the Camp scene to recreate all objects.
 	public static void SpawnAllBuilding()

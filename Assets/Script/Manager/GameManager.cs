@@ -11,22 +11,26 @@ public class GameManager : MonoBehaviour {
 	private GameObject _Spartan;
 	private Camera _PlayerCam;
 	private GameObject _CurObjectInteracted;
-	
+	private PrefabManager _PrefabManager;
 	private float _curProgress = 0;
 	private string _curAction = "None";
 	private string _curZone   = "Camp";
 	public string _curState; //Menu, Play, Talk
+	public string _lastState;
 	private int    _discussionStep = 0;
 	private PlayerHUD.DungeonParameters _CurDungeonParameters;
 	private List<string> _discussionListString = new List<string>();
 	private Quaternion _originalRotation;
 	private int _maxDungeonLevel = 1;
 	
-	public GameObject NewCart; // TODO: Remove this. It shouldnt be there.
-	
 	public string CurState
 	{
 		get {return _curState; }
+	}
+	
+	public string LastState
+	{
+		get {return _lastState; }
 	}
 	
 	public float CurProgress
@@ -71,19 +75,27 @@ public class GameManager : MonoBehaviour {
 		_PlayerMaster = GameObject.FindGameObjectWithTag("PlayerMaster");
 		_PlayerHUD    = _PlayerMaster.GetComponent<PlayerHUD>();
 		DungeonLevelPool.IniDungeonLevelPool();
+		
+	   _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	}
 	
 	// Use this for initialization
 	public void IniGame () 
 	{
 		SaveLoadSystem.Load();
-		Character.SetActiveTask(Character.TaskList[(int)TaskName.Spartan0]);
 		
 		SkipTutorial();
 		Camera.mainCamera.GetComponent<Skybox>().material = GetComponent<TextureManager>().Material_Skybox_Camp;
 		ChangeState("Play");
 		Character.RefillHP ();
 		Character.RefillMP ();
+		
+		BuildSystem.SpawnCart();
+		Character.TaskList[(int)TaskName.TaskIntro].Unlock();
+		Character.SetActiveTask(Character.TaskList[(int)TaskName.TaskIntro]);
+		_Player.transform.position = new Vector3(-20.0f,1.50f,-10.0f);
+		Debug.Log (_Player.transform.position);
+		//GameObject.FindGameObjectWithTag("Player").transform.rotation.SetLookRotation(Vector3.back);
 	}
 	
 	// Update is called once per frame
@@ -121,6 +133,11 @@ public class GameManager : MonoBehaviour {
 		
 		//Loop trough all task to look for completion
 		TestForTaskCompletion();
+	}
+	
+	void LateUpdate()
+	{
+		_lastState = _curState;	
 	}
 	
 	void UpdateBar() {
@@ -188,7 +205,7 @@ public class GameManager : MonoBehaviour {
 			}
 			else
 			{
-				float _angleToRotate = 0.1f*Mathf.Sin(((Mathf.Deg2Rad*_curProgress/100*180) + Mathf.PI/2));
+				float _angleToRotate = 7.25f*Mathf.Sin(((Mathf.Deg2Rad*_curProgress/100*180) + Mathf.PI/2))*Time.deltaTime;
 				_GO_EquippedItem.transform.RotateAroundLocal(new Vector3(1.0f,0.0f,0.0f), _angleToRotate);
 			}
 		}
@@ -240,16 +257,10 @@ public class GameManager : MonoBehaviour {
 			{
 				if(Character.TaskList[i].TestForCompletion() == true)
 				{
-					CompleteTask(Character.TaskList[i]);	
+					Character.TaskList[i].Finish();	
 				}
 			}
 		}			
-	}
-		
-	public void CompleteTask(Task _TaskToComplete)
-	{
-		ClaimReward (_TaskToComplete.Reward);
-		_TaskToComplete.IsFinished = true;
 	}
 	
 	public void ClaimReward(string _taskReward)
@@ -280,16 +291,14 @@ public class GameManager : MonoBehaviour {
 						for(int j = 0; j <  _RewardToGive.Count; j++)
 						{
 							TaskName TaskIndex = (TaskName) Enum.Parse(typeof(TaskName), _RewardToGive[j].type);  
-							Character.TaskList[(int)TaskIndex].IsUnlocked = true;
+							Character.TaskList[(int)TaskIndex].Unlock();
 						}
 						break;
 					
 					case "[DISS]":
 						if(_curReward == "Spartan")
 						{
-							Debug.Log ("Spartan Encountered");
-							_Spartan.GetComponent<SpartanInteract>().IncreaseStateWithPlayer(); //Todo [MISC]RepairCart for requirement
-							
+							_Spartan.GetComponent<SpartanInteract>().FinishCurTask();
 						}
 						break;
 					
@@ -394,7 +403,7 @@ public class GameManager : MonoBehaviour {
 	{
 		if(_curState == "Menu")
 		{
-			ChangeState("Play");
+			_PlayerHUD.CloseDisplayBox();
 		}
 		
 		else if(_curState == "Play")
@@ -407,11 +416,10 @@ public class GameManager : MonoBehaviour {
 	
 	public void ChangeState(string _newState)
 	{
-		_PlayerHUD.isDisplayCursor = true;
 		if(_newState == "Menu")
 		{
 			_curState = "Menu";
-			_Player.GetComponent<CharacterController>().enabled = true;
+			_Player.GetComponent<CharacterMotor>().enabled = true;
 			Screen.lockCursor = false;
 			_PlayerHUD.isDisplayCursor = false;
 			_Player.GetComponent<MouseLook>().enabled = false;
@@ -419,7 +427,7 @@ public class GameManager : MonoBehaviour {
 		}	
 		else if(_newState == "Play")
 		{
-			_Player.GetComponent<CharacterController>().enabled = true;
+			_Player.GetComponent<CharacterMotor>().enabled = true;
 			_curState = "Play";
 			Screen.lockCursor = true;
 			_PlayerHUD.isDisplayCursor = true;
@@ -431,7 +439,7 @@ public class GameManager : MonoBehaviour {
 			_curState = "Talk";
 			Screen.lockCursor = true;
 			_PlayerHUD.isDisplayCursor = false;
-			_Player.GetComponent<CharacterController>().enabled = false;
+			_Player.GetComponent<CharacterMotor>().enabled = false;
 			_Player.GetComponent<MouseLook>().enabled = true;
 			_PlayerCam.GetComponent<MouseLook>().enabled = true;
 		}
@@ -440,7 +448,7 @@ public class GameManager : MonoBehaviour {
 			_curState = "Build";
 			Screen.lockCursor = true;
 			_PlayerHUD.isDisplayCursor = false;
-			_Player.GetComponent<CharacterController>().enabled = true;
+			_Player.GetComponent<CharacterMotor>().enabled = true;
 			_Player.GetComponent<MouseLook>().enabled = true;
 			_PlayerCam.GetComponent<MouseLook>().enabled = true;
 		}
@@ -461,11 +469,14 @@ public class GameManager : MonoBehaviour {
 	
 	public void RaycastAnalyze(Collider _collidedObj)
 	{
+		Debug.Log ("BuildState : " + BuildSystem.BuildState + ", _curState : " + _curState);
+		Debug.Log ("_collidedObj : " + _collidedObj.name    + ", Weapon : " + (ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon));
 		if(BuildSystem.BuildState == 0)
 		{
 			// If equipped item is an hammer, start the building creation. Else, interact with the object.
-			if(ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp")
+			if(ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp" && _collidedObj.tag != "Interactive" && _collidedObj.tag != "Spartan" )
 			{
+				Debug.Log("ChangeView");
 				_PlayerHUD.ChangeBoxView("BuildList");
 			}
 			else if(_collidedObj != null)
@@ -506,9 +517,11 @@ public class GameManager : MonoBehaviour {
 								case "Gate":
 									_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[MISC] The door won't open. Maybe spartan know something about this.");	
 									break;
-								case "Cart03":	
-									if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer])
+								case "CartBroken":	
+									Debug.Log ("CartBroken");
+									if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer] && Character.TaskList[(int)TaskName.Spartan1].IsUnlocked == true)
 									{
+										Debug.Log("Repaired");
 										DoUniqueAction("RepairCart");
 									}
 									break;
@@ -681,12 +694,13 @@ public class GameManager : MonoBehaviour {
 			switch(_actionToDo)
 			{
 				case "RepairCart":
-					GameObject.Instantiate(NewCart,_CurObjectInteracted.transform.position,_CurObjectInteracted.transform.rotation);
-					Destroy(_CurObjectInteracted);
-					Character.TaskList[(int)TaskName.Spartan1].CompleteTask();
-					//_Spartan.GetComponent<SpartanInteract>().IncreaseStateWithPlayer(); //Todo [MISC]RepairCart for requirement
-					ActivateButtonInHUD(3); // Button3 is Skill Button
-					Character.SkillList[(int)SkillName.Crafter].Unlocked = true;
+					Destroy(_CurObjectInteracted); // Destroy the current Broken Cart
+					BuildSystem.SpawnCart("Cart"); // Create a new Cart
+				
+					_Spartan.GetComponent<SpartanInteract>().FinishCurTask();
+					//ActivateButtonInHUD(3); // Button3 is Skill Button
+					//Character.SkillList[(int)SkillName.Crafter].Unlocked = true;
+				
 					Character.GiveExpToSkill(Character.SkillList[(int)SkillName.Crafter],50.0f); 
 					break;
 				Default: 

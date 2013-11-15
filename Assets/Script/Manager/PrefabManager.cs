@@ -34,4 +34,6 @@ public class PrefabManager : MonoBehaviour {
 	public GameObject Spell_FireBat;
 	
 	public GameObject Environment_SpiderEggs;
+	public GameObject Environment_CartBroken;
+	public GameObject Environment_Cart;
 }

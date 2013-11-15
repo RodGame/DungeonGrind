@@ -172,12 +172,12 @@ static class Inventory {
 			}
 			else if(RessourceList[i].Name == "Rock")
 			{
-				RessourceList[i].CurValue = 25;
+				RessourceList[i].CurValue = 50;
 				RessourceList[i].MaxValue = 1000;
 			}
 			else if(RessourceList[i].Name == "Wood")
 			{
-				RessourceList[i].CurValue = 300;
+				RessourceList[i].CurValue = 200;
 				RessourceList[i].MaxValue = 1000;
 			}
 			/*else if(RessourceList[i].Name == "Gold")

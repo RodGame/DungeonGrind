@@ -44,7 +44,6 @@ public class PlayerHUD : MonoBehaviour {
 	private bool[] _buttonToggle = new bool[7] {false, false, false, false, false, true, false};
 	private int[,] _mapToDisplay;
 	
-	
 	private string objectRaycastCollided;
 	private string ToDisplayInBox;
 	private string _mouseOver;
@@ -67,9 +66,6 @@ public class PlayerHUD : MonoBehaviour {
 		public bool isWave;
 	};
 	
-	private bool _wasHardcore = false;
-	private bool _wasWave     = false;
-	
 	// Use this for initialization
 	void Start () {
 		_PlayerMaster = GameObject.FindGameObjectWithTag("PlayerMaster");
@@ -77,7 +73,7 @@ public class PlayerHUD : MonoBehaviour {
 		_GameManager  = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 		_PlayerCam    = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<Camera>();
 		_TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
-		ToDisplayInBox = "None";
+		ToDisplayInBox = "StatList";
 		_chatLogListString = new List<string>();
 			
 		invSlot_sizeX  = _boxSizeX/15;
@@ -94,6 +90,7 @@ public class PlayerHUD : MonoBehaviour {
 		{
 			UpdateKnownMap();	
 		}
+		Debug.Log (ToDisplayInBox);
 		
 	}
 	
@@ -134,9 +131,8 @@ public class PlayerHUD : MonoBehaviour {
 		GUI.skin.button.wordWrap = true;
 		GUI.skin.box.wordWrap    = true;
 		GUI.skin.label.wordWrap = true;		
-		
-		
-		if(ToDisplayInBox != "None" && _GameManager.CurState == "Menu")
+	
+		if(_GameManager.CurState == "Menu")
 		{
 			DisplayBox();
 		}
@@ -177,25 +173,6 @@ public class PlayerHUD : MonoBehaviour {
 		{
 			DisplayDiscussion (_curDiscussion);
 		}
-		DisplayHPGlobe();
-	}
-	
-	private void DisplayHPGlobe()
-	{
-		/*float globeHeight;
-		Texture GlobePic = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>().Texture_HPBar;
-		int globeSize = 50;
-		float healthPercent;
-		
-		//Calculate percentage of life
-		healthPercent = (float)Character.CurHP/(float)Character.MaxHP;
-		
-		globeHeight = healthPercent * globeSize;
-		Debug.Log ("Hp perc" + healthPercent);
-		//Draw the Health Bar group
-		GUI.BeginGroup (new Rect(Screen.width - 75.0f, Screen.height-(globeHeight+20),globeSize,globeSize));
-			GUI.DrawTexture (new Rect(0,-globeSize+globeHeight,globeSize,globeSize),GlobePic);
-		GUI.EndGroup ();*/
 	}
 	
 	private void DisplayTaskObjective()
@@ -378,8 +355,11 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayCursor()
 	{
+		Color _ColorToDisplay;
+		
 		if(_isInteractiveDetected == true)
 		{
+			_ColorToDisplay = Color.green;
 			if(objectRaycastCollided == "Spartan")
 			{
 				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Talk to Spartan");	
@@ -388,31 +368,47 @@ public class PlayerHUD : MonoBehaviour {
 			{
 				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT*2),"Use Crafting Table");	
 			}
-			else if(objectRaycastCollided == "Cart03")
+			else if(objectRaycastCollided == "CartBroken")
 			{
-				if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer])
+				if(Character.TaskList[(int)TaskName.Spartan1].IsUnlocked)
 				{
-					GUI.Label (new Rect(Screen.width/2 - 30,Screen.height*0.52f,125,_LINE_HEIGHT*2),"Repair cart with Hammer");
+					if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer])
+					{
+						GUI.Label (new Rect(Screen.width/2 - 30,Screen.height*0.52f,125,_LINE_HEIGHT*2),"Repair cart with Hammer");
+					}
+					else
+					{
+						GUI.Label (new Rect(Screen.width/2 - 30,Screen.height*0.52f,125,_LINE_HEIGHT*2),"Equip hammer to repair the cart");
+					}	
 				}
 				else
 				{
-					GUI.Label (new Rect(Screen.width/2 - 30,Screen.height*0.52f,125,_LINE_HEIGHT*2),"Equip hammer to repair the cart");
-				}	
+					_ColorToDisplay = Color.white;
+				}
 			}
 			else if(objectRaycastCollided == "Monster")
 			{
 				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Attack with " + ItemInventory.EquippedWeapon.Name);	
 			}
+			else if(objectRaycastCollided == "Tree")
+			{
+				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Cut the tree");	
+			}
+			else if(objectRaycastCollided == "Rock")
+			{
+				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Mine some rock");	
+			}
 			else
 			{
-				GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Attack " + objectRaycastCollided);
+				//GUI.Label (new Rect(Screen.width/2 - 15,Screen.height*0.52f,125,_LINE_HEIGHT),"Attack " + objectRaycastCollided);
 			}
-			GUI.contentColor = Color.green;
+			
 		}
 		else
 		{
-			GUI.contentColor = Color.white;
+			_ColorToDisplay = Color.white;
 		}
+		GUI.contentColor = _ColorToDisplay;
 		GUI.Label (new Rect(Screen.width/2,Screen.height/2,_LINE_HEIGHT,_LINE_HEIGHT),"O");	
 		GUI.contentColor = Color.white;
 	}
@@ -432,8 +428,10 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayBox()
 	{
-		
-		GUI.Box(new Rect(_boxPosX, _boxPosY, _boxSizeX, _boxSizeY),"");
+		if(ToDisplayInBox != "Help")
+		{
+			GUI.Box(new Rect(_boxPosX, _boxPosY, _boxSizeX, _boxSizeY),"");
+		}
 		DisplayInBox (ToDisplayInBox);
 	}
 	
@@ -480,20 +478,28 @@ public class PlayerHUD : MonoBehaviour {
 		nbrLine++;
 		
 		if(GUI.Button(new Rect(_POSX, (_LINE_HEIGHT)*14, _buttonX, _LINE_HEIGHT), "F9 Save Game"))  {SaveLoadSystem.Save ();Debug.Log ("Saved");}
+		
+		if(GUI.Button(new Rect(_POSX, (_LINE_HEIGHT)*15, _buttonX, _LINE_HEIGHT), "F10 Help"))  {ChangeBoxView("Help");}
 	}
-	
 	public  void ChangeBoxView(string _newBoxToShow)
 	{
-		if(ToDisplayInBox == _newBoxToShow)
+		if(BuildSystem.BuildState == 0)
 		{
-			_GameManager.ChangeState ("Play");
-			ToDisplayInBox = "None";
-		} 
-		else 
-		{
-			_GameManager.ChangeState ("Menu");
-			ToDisplayInBox = _newBoxToShow;
+			if(ToDisplayInBox == _newBoxToShow && _GameManager.LastState == "Menu")
+			{
+				CloseDisplayBox();
+			} 
+			else 
+			{
+				_GameManager.ChangeState ("Menu");
+				ToDisplayInBox = _newBoxToShow;
+			}
 		}
+	}
+	
+	public void CloseDisplayBox()
+	{
+		_GameManager.ChangeState ("Play");
 	}
 	
 	public  void SwitchBoxFromKeys(string _keyPressed)
@@ -509,12 +515,15 @@ public class PlayerHUD : MonoBehaviour {
 			case "F7": if(Application.loadedLevelName == "Dungeon"){ChangeBoxView ("Map");} break;
 			case "F8": if(Application.loadedLevelName == "Dungeon"){AbandonDungeon();} break;
 			case "F9": SaveLoadSystem.Save (); break;
+			case "F10": if(_buttonToggle[5] == true){ChangeBoxView ("Help") ;} break;
+			
 			default:break;
 		}
 	}
 	
 	private void DisplayInBox(string _toDisplay)
 	{
+		Debug.Log ("To Show : " + _toDisplay);
 		switch(_toDisplay)
 		{
 		
@@ -526,6 +535,7 @@ public class PlayerHUD : MonoBehaviour {
 					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.WeaponList[i].Name, "mouseOverOnItemToCraft_" + Inventory.WeaponList[i].Name)))
 					{
 						CraftSystem.CraftItem (Inventory.WeaponList[i]);
+						CloseDisplayBox();
 					}
 				}
 			}
@@ -537,9 +547,13 @@ public class PlayerHUD : MonoBehaviour {
 			{
 				if(Inventory.BuildingList[i].IsUnlocked == true)
 				{
-					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.BuildingList[i].Name, "mouseOverOnBuildingToBuild_" + Inventory.BuildingList[i].Name)))
-					{
-						BuildSystem.BuildBuilding (Inventory.BuildingList[i]);
+					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX*1.75f, _LINE_HEIGHT), new GUIContent(Inventory.BuildingList[i].Name, "mouseOverOnBuildingToBuild_" + Inventory.BuildingList[i].Name)))
+					{	
+						if(BuildSystem.BuildState == 0)
+						{
+							BuildSystem.BuildBuilding (Inventory.BuildingList[i]);
+							_GameManager.ChangeState ("Build");
+						}
 					}
 				}
 			}
@@ -632,11 +646,19 @@ public class PlayerHUD : MonoBehaviour {
 		case "DungeonUpgrade":
 			DisplayDungeonUpgrade();
 			break;
+		case "Help":
+			DisplayHelp();
+			break;
 		default:
 			Debug.LogWarning ("Wrong Display in PlayerHUD :" + _toDisplay);
 			break;
 		}	
 		
+	}
+	
+	private void DisplayHelp()
+	{
+		Debug.Log ("Help");
 	}
 	
 	private void DisplaySpellBook()
@@ -1107,7 +1129,7 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayFloatingLabels(List<string> _toDisplay) 
 	{
-		float _posX  = Input.mousePosition.x; float _posY  = Mathf.Abs(Input.mousePosition.y - _PlayerCam.pixelHeight) + 4*_LINE_HEIGHT;
+		float _posX  = Input.mousePosition.x; float _posY  = Mathf.Abs(Input.mousePosition.y - _PlayerCam.pixelHeight) + _LINE_HEIGHT;
 		float _sizeX = Screen.width/8;   float _sizeY = _toDisplay.Count*_LINE_HEIGHT;
 		float _opacity = _FLOATING_RECT_OPACITY;
 		

@@ -5,6 +5,7 @@ Library/*
 Assets/External Assets
 Assets/Standard Assets
 Assets/SpartanKing
+Assets/NGUI
 BuildedGame
 *.csproj
 *.sln

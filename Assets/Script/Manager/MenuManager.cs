@@ -1,4 +1,4 @@
-using UnityEngine;
+ using UnityEngine;
 using System.Collections;
 
 public class MenuManager : MonoBehaviour {
@@ -16,8 +16,7 @@ public class MenuManager : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
-		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
-		_GameManager.ChangeState("Menu");
+		_GameManager   = GameObject.FindGameObjectWithTag ("GameMaster").GetComponent<GameManager>();
 	}
 	
 	void OnGUI()
@@ -99,8 +98,6 @@ public class MenuManager : MonoBehaviour {
 	{
 		Application.LoadLevel("Camp");
 		GameObject.FindGameObjectWithTag("PlayerMaster").GetComponent<PlayerHUD>().enabled = true;
-		GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>().IniGame ();
-		GameObject.FindGameObjectWithTag("Player").transform.position = new Vector3(-20.0f,0.75f,-10.0f);
-		//GameObject.FindGameObjectWithTag("Player").transform.rotation.SetLookRotation(Vector3.back);
+		GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>().IniGame();
 	}
 }

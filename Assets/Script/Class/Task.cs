@@ -40,13 +40,11 @@ public class Task {
 	public bool IsUnlocked
 	{
 		get {return _isUnlocked; }
-		set {_isUnlocked = value; }
 	}
 	
 	public bool IsFinished
 	{
 		get {return _isFinished; }
-		set {_isFinished = value; }
 	}
 	
 	public bool TestForCompletion()
@@ -103,7 +101,7 @@ public class Task {
 				}
 				default:
 				{
-					Debug.Log ("WARNING in Task.cs - Trying to spend an unkown expenditure : " + _curType);
+					Debug.Log ("WARNING in Task.cs - Trying to test for an unknown condition: " + _curType);
 					break;
 				}
 			}
@@ -111,12 +109,17 @@ public class Task {
 		return _isTaskCompleted;
 	}
 	
-	public void CompleteTask()
+	public void Unlock()
+	{
+		this._isUnlocked = true;
+		GA.API.Design.NewEvent("Task:" + this._name + ":IsUnlocked", Character.SkillList[(int)SkillName.Fighter].Level + Character.SkillList[(int)SkillName.IceMage].Level);
+	}
+	
+	public void Finish()
 	{
 		_GameManager.ClaimReward (this.Reward);
-		this.IsFinished = true;
-		//Debug.Log (this._definition + " : " + this._isFinished);
-		//_GameManager.AddChatLogHUD("[TASK]" + this._name + " Is Finished");
+		this._isFinished = true;
+		GA.API.Design.NewEvent("Task:" + this._name + ":IsFinished", Character.SkillList[(int)SkillName.Fighter].Level + Character.SkillList[(int)SkillName.IceMage].Level);
 	}
 }
 
@@ -126,5 +129,5 @@ public enum TaskName {
 	Spartan3,
 	Spartan2,
 	Spartan1,
-	Spartan0
+	TaskIntro
 }

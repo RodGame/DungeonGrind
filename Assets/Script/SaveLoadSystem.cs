@@ -8,6 +8,11 @@ static class SaveLoadSystem {
 	
 	public static List<BuildingInfo> LoadedBuildingInfo = new List<BuildingInfo>();
 	static GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
+	
+	static public int Spartan_TaskState   = 0;
+	static public int Spartan_CurrentTask = 0;
+	
+	
 	public struct BuildingInfo
 	{
 		public int id;
@@ -98,20 +103,8 @@ static class SaveLoadSystem {
 		// Save Upgrades
 		for(int i = 0; i < DungeonLevelPool.DungeonUpgradeList.Length; i++)
 		{
-			int _isUnlocked = 0;
-			int _isEnabled  = 0;
-			
-			if(DungeonLevelPool.DungeonUpgradeList[i].IsUnlocked)
-			{
-				_isUnlocked = 1;
-			}
-			
-			if(DungeonLevelPool.DungeonUpgradeList[i].IsEnabled)
-			{
-				_isEnabled = 1;
-			}
-			PlayerPrefs.SetInt   ("DungeonUpgradeIsUnlocked_" + DungeonLevelPool.DungeonUpgradeList[i].Name, _isUnlocked);
-			PlayerPrefs.SetInt   ("DungeonUpgradeIsEnabled_"  + DungeonLevelPool.DungeonUpgradeList[i].Name, _isEnabled);
+			PlayerPrefs.SetInt   ("DungeonUpgradeIsUnlocked_" + DungeonLevelPool.DungeonUpgradeList[i].Name, Convert.ToInt32(DungeonLevelPool.DungeonUpgradeList[i].IsUnlocked));
+			PlayerPrefs.SetInt   ("DungeonUpgradeIsEnabled_"  + DungeonLevelPool.DungeonUpgradeList[i].Name, Convert.ToInt32(DungeonLevelPool.DungeonUpgradeList[i].IsEnabled));
 		}
 		
 		// Save Killcount
@@ -139,6 +132,21 @@ static class SaveLoadSystem {
 			SaveBuildings();
 		}
 		
+		//Save Tasks
+		for(int i = 0; i < Character.TaskList.Length; i++)
+		{
+			PlayerPrefs.SetInt   ("TaskIsUnlocked_" + i, Convert.ToInt32(Character.TaskList[i].IsUnlocked));
+			PlayerPrefs.SetInt   ("TaskIsEnabled_"  + i, Convert.ToInt32(Character.TaskList[i].IsFinished));
+		}
+		
+		//Save Spartan State
+		if(Application.loadedLevelName == "Camp")
+		{
+			SpartanInteract _SpartanInteract = GameObject.FindGameObjectWithTag("Spartan").GetComponent<SpartanInteract>();
+			PlayerPrefs.SetInt("Spartan_TaskState", _SpartanInteract._taskState);
+			PlayerPrefs.SetInt("Spartan_CurrentTask",_SpartanInteract._currentTask);
+		}
+		
 		GameAnalyticsManager.SendDatas();
 	}
 	
@@ -160,7 +168,8 @@ static class SaveLoadSystem {
 			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationY", BuildSystem.CreatedBuildingList[i].transform.rotation.y);
 			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationZ", BuildSystem.CreatedBuildingList[i].transform.rotation.z);
 			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationW", BuildSystem.CreatedBuildingList[i].transform.rotation.w);	
-		}	
+		}
+		
 	}
 	
 	static public void Load()
@@ -246,7 +255,6 @@ static class SaveLoadSystem {
 			MagicBook.UpdateSpellStats();
 			MagicBook.ActiveSpell = Character.SpellList[(int)(SpellName)PlayerPrefs.GetInt("ActiveSpell")];  
 			
-			
 			// Load Upgrades
 			for(int i = 0; i < DungeonLevelPool.DungeonUpgradeList.Length; i++)
 			{
@@ -259,16 +267,35 @@ static class SaveLoadSystem {
 			{
 				Bestiary.MonsterList[i].NbrKilled = PlayerPrefs.GetInt   ("MonsterKillcount_" + Bestiary.MonsterList[i].Name);	
 			}
-			
+			/*
 			// Load Curren Dungeon Setting(Not working perfectly)
+			 PlayerHUD.DungeonParameters _SavedDungeonParameters;
+			_SavedDungeonParameters.level      = PlayerPrefs.GetInt   ("CurDungeonLevel");
+			_SavedDungeonParameters.isHardcore = (PlayerPrefs.GetInt   ("CurDungeonIsHardcore") == 1);
+			_SavedDungeonParameters.isWave     = (PlayerPrefs.GetInt   ("CurDungeonIsWave") == 1);
 			
-			// PlayerHUD.DungeonParameters _SavedDungeonParameters;
-			//_SavedDungeonParameters.level      = PlayerPrefs.GetInt   ("CurDungeonLevel");
-			//_SavedDungeonParameters.isHardcore = (PlayerPrefs.GetInt   ("CurDungeonIsHardcore") == 1);
-			///_SavedDungeonParameters.isWave     = (PlayerPrefs.GetInt   ("CurDungeonIsWave") == 1);
+			_GameManager.CurDungeonParameters = _SavedDungeonParameters;
+			*/
 			
-			//_GameManager.CurDungeonParameters = _SavedDungeonParameters;
+			//Load Tasks
+			for(int i = 0; i < Character.TaskList.Length; i++)
+			{
+				if(PlayerPrefs.GetInt("TaskIsUnlocked_" + i) == 1)
+				{
+					Character.TaskList[i].Unlock();	
+				}
+				
+				if(PlayerPrefs.GetInt("TaskIsEnabled_"  + i) == 1)
+				{
+					Character.TaskList[i].Finish(); 
+				}
+			}
 			
+			//Load Spartan State
+			Spartan_TaskState   = PlayerPrefs.GetInt("Spartan_TaskState");
+			Spartan_CurrentTask = PlayerPrefs.GetInt("Spartan_CurrentTask");
+			
+			// Load buildings
 			LoadBuildings();
 			
 		}
@@ -283,7 +310,7 @@ static class SaveLoadSystem {
 			LoadedBuildingInfo = new List<BuildingInfo>();
 			
 			int _numberBuilding = PlayerPrefs.GetInt("BuildingCreated_numberBuilding");
-			Debug.Log ("Loaded " + _numberBuilding + " Buildings");
+			//Debug.Log ("Loaded " + _numberBuilding + " Buildings");
 			for(int i = 0; i < _numberBuilding; i++)
 			{
 				int   _dummyId   = PlayerPrefs.GetInt("BuildingCreated_" + i + "_id");
