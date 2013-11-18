@@ -126,45 +126,45 @@ static class Character {
 			SkillList[i].Name = ((SkillName)i).ToString();
 			if(SkillList[i].Name == "Crafter")
 			{
-				SkillList[i].Unlocked = false;
+				SkillList[i].IsUnlocked = false;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
 			else if(SkillList[i].Name == "Lumberjack")
 			{
-				SkillList[i].Unlocked = true;
+				SkillList[i].IsUnlocked = true;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
 			else if(SkillList[i].Name == "Miner")
 			{
-				SkillList[i].Unlocked = true;
+				SkillList[i].IsUnlocked = true;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
 			else if(SkillList[i].Name == "Fighter")
 			{
-				SkillList[i].Unlocked = true;
+				SkillList[i].IsUnlocked = true;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
 			else if(SkillList[i].Name == "Constitution")
 			{
-				SkillList[i].Unlocked = true;
+				SkillList[i].IsUnlocked = true;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
 			else if(SkillList[i].Name == "IceMage")
 			{
 				SkillList[i].Name     = "Ice Mage";
-				SkillList[i].Unlocked = true;
+				SkillList[i].IsUnlocked = true;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
 			else if(SkillList[i].Name == "FireMage")
 			{
 				SkillList[i].Name     = "Fire Mage";
-				SkillList[i].Unlocked = true;
+				SkillList[i].IsUnlocked = true;
 				//SkillList[i].Level  = 0;
 				SkillList[i].CurExp = 0;
 			}
@@ -174,46 +174,120 @@ static class Character {
 	private static void IniTaskList()
 	{
 		string _taskName;
+		//int    _mainQuestNbr = 1;
 		for(int i = 0; i < TaskList.Length; i++)
 		{
 			_taskName = ((TaskName)i).ToString();
 			
 			TaskList[i] = new Task();
-			
-			if(_taskName == "TaskIntro")
+			TaskList[i].MissionId = i;
+			if(_taskName == "MainQuest0")
 			{
 				TaskList[i].Name = _taskName;	
-				TaskList[i].Definition = "Talk to Spartan to obtain your first quest.";
+				TaskList[i].Title = "Talk to Spartan";
+				TaskList[i].Description = "Maybe it's the big sign over it's head, but I feel like he want me to talk to him";
 				TaskList[i].Requirement = "None";				
-				TaskList[i].Reward = "None";
+				TaskList[i].Reward = "[ITEM]1*Hammer";
+				TaskList[i].MissionType = 1;
 			}
-			else if(_taskName == "Spartan1")
+			else if(_taskName == "MainQuest1")
 			{
 				TaskList[i].Name = _taskName;
-				TaskList[i].Definition = "Repair the wooden cart behind Spartan";
-				TaskList[i].Requirement = "None"; //TODO Add Misc requirements
+				TaskList[i].Title = "Repair the broken cart behind Spartan";
+				TaskList[i].Description = "It seems like I need to repair that wreck. Why is he giving order to me?";
+				TaskList[i].Requirement = "None"; //TODO Adwd Misc requirements
 				TaskList[i].Reward = "[RESS]50*Wood";
+				TaskList[i].MissionType = 1;
 			}
-			else if(_taskName == "Spartan2")
+			else if(_taskName == "MainQuest2")
 			{
 				TaskList[i].Name = _taskName;
-				TaskList[i].Definition = "Build a crafting table";
+				TaskList[i].Title = "Build a crafting table";
+				TaskList[i].Description = "Now he wants me to build a crafting table. Well, at least that seems cool and last mission gave me some woods!";
 				TaskList[i].Requirement = "[BUIL]1*CraftingTable";
+				TaskList[i].Reward = "[DISS]Spartan,[RESS]20*Coin,[ITEM]1*RockSword";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest3")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "Clear dungeon level 1";
+				TaskList[i].Description = "This guy is cool, he gave me coins! Now what are they for?? I think I should equip my sword before entering the crypt...";
+				TaskList[i].Requirement = "[DUNG]2*Level";
+				TaskList[i].Reward = "[DISS]Spartan,[ITEM]1*RockAxe";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest4")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "Kill 2 Spider Queen";
+				TaskList[i].Description = "I already feel stronger from fighting those spiders. I'll keep fighting until I can kill these spiders at dungeon level 7!";
+				TaskList[i].Requirement = "[KILL]2*SpiderQueen";
+				TaskList[i].Reward = "[DISS]Spartan,[ITEM]1*RockPickaxe";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest5")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "Kill 1 Skeleton Toon";
+				TaskList[i].Description = "Spartan told me that I would need to upgrade the crypt to fight the Skeletons. I will look at the dungeon entrance for it.";
+				TaskList[i].Requirement = "[KILL]1*SkeletonToon";
 				TaskList[i].Reward = "[DISS]Spartan";
+				TaskList[i].MissionType = 1;
 			}
-			else if(_taskName == "Spartan3")
+			/*else if(_taskName == "MainQuest6")
 			{
 				TaskList[i].Name = _taskName;
-				TaskList[i].Definition = "No quest yet. Go play in dungeon!";
-				TaskList[i].Requirement = "[CRAF]1*RockAxe+1*RockPickaxe,[RESS]10*Rock+10*Wood";
-				TaskList[i].Reward = "[DISS]Spartan,[RESS]15*Coin";
+				TaskList[i].Title = "Kill 1 Skeleton Toon";
+				TaskList[i].Description = "Spartan told me that I would need to upgrade the crypt to fight the Skeletons. I will look at the dungeon entrance for it.";
+				TaskList[i].Requirement = "[KILL]1*SkeletonToon";
+				TaskList[i].Reward = "[DISS]Spartan";
+				TaskList[i].MissionType = 1;
 			}
-			/*else if(_taskName == "Spartan4")
+			else if(_taskName == "MainQuest7")
 			{
 				TaskList[i].Name = _taskName;
-				TaskList[i].Definition = "Buy a Sword";
-				TaskList[i].Requirement = "[RESC]15*Coin";
-				TaskList[i].Reward = "[ITEM]1*RockSword";
+				TaskList[i].Title = "Kill 1 Skeleton Toon";
+				TaskList[i].Description = "Spartan told me that I would need to upgrade the crypt to fight the Skeletons. I will look at the dungeon entrance for it.";
+				TaskList[i].Requirement = "[KILL]1*SkeletonToon";
+				TaskList[i].Reward = "[DISS]Spartan";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest8")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "Kill 1 Skeleton Toon";
+				TaskList[i].Description = "Spartan told me that I would need to upgrade the crypt to fight the Skeletons. I will look at the dungeon entrance for it.";
+				TaskList[i].Requirement = "[KILL]1*SkeletonToon";
+				TaskList[i].Reward = "[DISS]Spartan";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest9")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "Kill 1 Skeleton Toon";
+				TaskList[i].Description = "Spartan told me that I would need to upgrade the crypt to fight the Skeletons. I will look at the dungeon entrance for it.";
+				TaskList[i].Requirement = "[KILL]1*SkeletonToon";
+				TaskList[i].Reward = "[DISS]Spartan";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest10")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "Kill 1 Skeleton Toon";
+				TaskList[i].Description = "Spartan told me that I would need to upgrade the crypt to fight the Skeletons. I will look at the dungeon entrance for it.";
+				TaskList[i].Requirement = "[KILL]1*SkeletonToon";
+				TaskList[i].Reward = "[DISS]Spartan";
+				TaskList[i].MissionType = 1;
+			}
+			else if(_taskName == "MainQuest10")
+			{
+				TaskList[i].Name = _taskName;
+				TaskList[i].Title = "NOT FOUND";
+				TaskList[i].Description = "NOT FOUND";
+				TaskList[i].Requirement = "None";
+				TaskList[i].Reward = "None";
+				TaskList[i].MissionType = 1;
 			}*/
 		}
 	}
@@ -420,7 +494,7 @@ static class Character {
 		int _totalSkillLvl = 0;
 		for(int i = 0; i <  Character.SkillList.Length; i++)
 		{
-			if(Character.SkillList[i].Unlocked == true)
+			if(Character.SkillList[i].IsUnlocked == true)
 			{
 				_totalSkillLvl += Character.SkillList[i].Level;
 			}
@@ -433,7 +507,7 @@ static class Character {
 		int _totalSkillLvl = 0;
 		for(int i = 0; i <  Character.SkillList.Length; i++)
 		{
-			if(Character.SkillList[i].Unlocked == true)
+			if(Character.SkillList[i].IsUnlocked == true)
 			{
 				_totalSkillLvl += PlayerPrefs.GetInt ("SkillLvl_" + Character.SkillList[i].Name);
 			}

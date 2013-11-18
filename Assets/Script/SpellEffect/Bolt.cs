@@ -3,9 +3,9 @@ using System.Collections;
 
 public class Bolt : MonoBehaviour {
 	
-	private float _speed = 0.25f;
+	private float _speed = 22f;
 	private float _timeLived = 0.0f;
-	private float _timeLife = 0.5f;
+	private float _timeLife = 0.4f;
 	// Update is called once per frame
 	void Update () {
 		_timeLived += Time.deltaTime;
@@ -15,7 +15,7 @@ public class Bolt : MonoBehaviour {
 		}
 		else
 		{
-			transform.position += transform.forward*(_speed);
+			transform.position += transform.forward*(_speed)*Time.deltaTime;
 		}
 	}
 	

@@ -7,7 +7,6 @@ static class ItemInventory {
 	public static int             InventorySize   = 50; // Need to modify PlayerHUD.DisplayBoxItemList() to modify this
 	public static InventorySlot[] InventoryList   = new InventorySlot[InventorySize];
 	private static Weapon		  _EquippedWeapon = null;
-	private static GameManager    _GameManager    = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	private static GameObject     _Player         = GameObject.FindGameObjectWithTag("Player");
 	private static GameObject     _GO_InstantiatedWeapon;
 	

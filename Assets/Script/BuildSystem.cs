@@ -85,7 +85,7 @@ static class BuildSystem {
 	
 	public static void SpawnCart()
 	{
-		if(Character.TaskList[(int)TaskName.Spartan1].IsFinished || (Character.TaskList[(int)TaskName.Spartan1].IsUnlocked && !Character.TaskList[(int)TaskName.Spartan1].IsFinished && SaveLoadSystem.Spartan_TaskState > 1))
+		if(Character.TaskList[(int)TaskName.MainQuest1].IsFinished || (Character.TaskList[(int)TaskName.MainQuest1].IsUnlocked && !Character.TaskList[(int)TaskName.MainQuest1].IsFinished && SaveLoadSystem.Spartan_TaskState > 1))
 		{
 			SpawnCart("Cart");
 		}

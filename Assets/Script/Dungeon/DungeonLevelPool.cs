@@ -49,7 +49,7 @@ static class DungeonLevelPool {
 				
 				_nbrPseudoSpider = (int)Mathf.Round(level*1f);
 				_nbrSpider       = (int)Mathf.Round(level*0.6f);
-				if(level >= 7) {_nbrSpiderQueen = level - 3;}
+				if(level >= 7) {_nbrSpiderQueen = level - 6;}
 				
 								 
 				DungeonLevelList[level].MonsterList = _nbrPseudoSpider + "*PseudoSpider+" + _nbrSpider + "*Spider+" + _nbrSpiderQueen + "*SpiderQueen";              //TODO [DROP] With droppable item

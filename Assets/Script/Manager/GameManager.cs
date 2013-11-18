@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour {
 	private List<string> _discussionListString = new List<string>();
 	private Quaternion _originalRotation;
 	private int _maxDungeonLevel = 1;
-	
+	private bool _testForTaskCompletion = false;
 	public string CurState
 	{
 		get {return _curState; }
@@ -79,7 +79,7 @@ public class GameManager : MonoBehaviour {
 	   _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	}
 	
-	// Use this for initialization
+	// Use this for initialization. This is called after "Camp" is loaded
 	public void IniGame () 
 	{
 		SaveLoadSystem.Load();
@@ -91,19 +91,22 @@ public class GameManager : MonoBehaviour {
 		Character.RefillMP ();
 		
 		BuildSystem.SpawnCart();
-		Character.TaskList[(int)TaskName.TaskIntro].Unlock();
-		Character.SetActiveTask(Character.TaskList[(int)TaskName.TaskIntro]);
-		_Player.transform.position = new Vector3(-20.0f,1.50f,-10.0f);
-		Debug.Log (_Player.transform.position);
+		Character.TaskList[(int)TaskName.MainQuest0].Unlock();
+		Character.SetActiveTask(Character.TaskList[(int)TaskName.MainQuest0]);
+		_Player.transform.position = new Vector3(0f,1.50f,-7.5f);
+		_Player.transform.rotation.SetLookRotation(Vector3.back); // This line doesn't work
+		_testForTaskCompletion = true;
+		//Debug.Log (_Player.transform.position);
 		//GameObject.FindGameObjectWithTag("Player").transform.rotation.SetLookRotation(Vector3.back);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if(_Spartan == null && GameObject.FindGameObjectWithTag("Spartan") != null)
+		if(_Spartan == null && Application.loadedLevelName == "Camp")
 		{
 			_Spartan = GameObject.FindGameObjectWithTag("Spartan");	
-		};
+		}
+		
 		if(_curAction != "None")
 		{
 			UpdateBar();
@@ -132,7 +135,10 @@ public class GameManager : MonoBehaviour {
 		Character.RegenMP();
 		
 		//Loop trough all task to look for completion
-		TestForTaskCompletion();
+		if(_testForTaskCompletion)
+		{
+			TestForTaskCompletion();
+		}
 	}
 	
 	void LateUpdate()
@@ -249,15 +255,18 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
-	void TestForTaskCompletion()
+	void TestForTaskCompletion() //Todo, simplify this logic
 	{
 		for(int i = 0; i <  Character.TaskList.Length; i++)
 		{
 			if((Character.TaskList[i].IsUnlocked == true && Character.TaskList[i].IsFinished == false) && Character.TaskList[i].Requirement != "None") //Look for task that are Unlocked but not Finished
 			{
-				if(Character.TaskList[i].TestForCompletion() == true)
+				if(Character.TaskList[i].MissionType != 1 || _Spartan != null)
 				{
-					Character.TaskList[i].Finish();	
+					if(Character.TaskList[i].TestForCompletion() == true)
+					{
+						Character.TaskList[i].Finish();	
+					}	
 				}
 			}
 		}			
@@ -298,7 +307,19 @@ public class GameManager : MonoBehaviour {
 					case "[DISS]":
 						if(_curReward == "Spartan")
 						{
-							_Spartan.GetComponent<SpartanInteract>().FinishCurTask();
+							//Debug.Log (_Spartan.GetComponent<SpartanInteract>().CurrentTask);
+							//Debug.Log (_Spartan.GetComponent<SpartanInteract>().TaskState);
+							if(_Spartan != null)
+							{
+								if(_Spartan.GetComponent<SpartanInteract>().TaskState != 2)
+								{
+									_Spartan.GetComponent<SpartanInteract>().FinishCurTask();
+								}
+							}
+							else
+							{
+								Debug.LogWarning ("GameManager.cs - ClaimReward(). Spartan Not Found");
+							}
 						}
 						break;
 					
@@ -399,16 +420,16 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
-	public void ToggleState()
+	public void ToggleMenu()
 	{
 		if(_curState == "Menu")
 		{
-			_PlayerHUD.CloseDisplayBox();
+			_PlayerHUD.CloseHUD();
 		}
 		
 		else if(_curState == "Play")
 		{
-			ChangeState("Menu");
+			_PlayerHUD.StartHUD();
 		}
 		
 		
@@ -469,12 +490,16 @@ public class GameManager : MonoBehaviour {
 	
 	public void RaycastAnalyze(Collider _collidedObj)
 	{
-		Debug.Log ("BuildState : " + BuildSystem.BuildState + ", _curState : " + _curState);
-		Debug.Log ("_collidedObj : " + _collidedObj.name    + ", Weapon : " + (ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon));
+		//Debug.Log ("BuildState : " + BuildSystem.BuildState + ", _curState : " + _curState);
+		//Debug.Log ("_collidedObj : " + _collidedObj.name    + ", Weapon : " + (ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon));
 		if(BuildSystem.BuildState == 0)
 		{
+			// Verify that there is an EquippedWeapon
+			int _idEquippedWeapon;
+			if(ItemInventory.EquippedWeapon == null){_idEquippedWeapon = -1;} else {_idEquippedWeapon = ItemInventory.EquippedWeapon.IdWeapon;}
+			
 			// If equipped item is an hammer, start the building creation. Else, interact with the object.
-			if(ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp" && _collidedObj.tag != "Interactive" && _collidedObj.tag != "Spartan" )
+			if(_idEquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp" && _collidedObj.tag != "Interactive" && _collidedObj.tag != "Spartan" )
 			{
 				Debug.Log("ChangeView");
 				_PlayerHUD.ChangeBoxView("BuildList");
@@ -519,7 +544,7 @@ public class GameManager : MonoBehaviour {
 									break;
 								case "CartBroken":	
 									Debug.Log ("CartBroken");
-									if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer] && Character.TaskList[(int)TaskName.Spartan1].IsUnlocked == true)
+									if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer] && Character.TaskList[(int)TaskName.MainQuest1].IsUnlocked == true)
 									{
 										Debug.Log("Repaired");
 										DoUniqueAction("RepairCart");
@@ -566,7 +591,7 @@ public class GameManager : MonoBehaviour {
 					case "Rock":
 						_PlayerHUD.DetectInteractive(_collidedObj.tag);
 						break;
-					case "Spartan":
+					case "wan":
 						_PlayerHUD.DetectInteractive(_collidedObj.tag);
 						break;
 					case "CraftingTable":
@@ -631,8 +656,12 @@ public class GameManager : MonoBehaviour {
 	public void RightClick(Collider _collidedObj)
 	{
 		float distanceBuild = 7.0f;
-		//BuildingManager _BuildingManager;
-		if(ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && Application.loadedLevelName == "Camp")
+		
+		// Verify that there is an EquippedWeapon
+		int _idEquippedWeapon;
+		if(ItemInventory.EquippedWeapon == null){_idEquippedWeapon = -1;} else {_idEquippedWeapon = ItemInventory.EquippedWeapon.IdWeapon;}
+		
+		if(_idEquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && Application.loadedLevelName == "Camp")
 		{
 			// Test for a BuildingManager component to identify building.
 			if(_collidedObj != null)

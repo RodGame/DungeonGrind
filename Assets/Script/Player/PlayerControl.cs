@@ -77,11 +77,11 @@ public class PlayerControl : MonoBehaviour {
 	{
 		if(Input.GetKeyDown(KeyCode.Tab))
 		{
-			_GameManager.ToggleState();
+			_GameManager.ToggleMenu();
 		}
 		else if(Input.GetKeyDown(KeyCode.F1) || Input.GetKeyDown(KeyCode.I)){_PlayerHUD.SwitchBoxFromKeys("F1");}      //Item
 		else if(Input.GetKeyDown(KeyCode.F2) || Input.GetKeyDown(KeyCode.C)){_PlayerHUD.SwitchBoxFromKeys("F2");}      //Stats
-		else if(Input.GetKeyDown(KeyCode.F3) || Input.GetKeyDown(KeyCode.K)){_PlayerHUD.SwitchBoxFromKeys("F3");}      //Skills
+		else if(Input.GetKeyDown(KeyCode.F3) || Input.GetKeyDown(KeyCode.X)){_PlayerHUD.SwitchBoxFromKeys("F3");}      //Skills
 		else if(Input.GetKeyDown(KeyCode.F4) || Input.GetKeyDown(KeyCode.P)){_PlayerHUD.SwitchBoxFromKeys("F4");}      //Spell
 		else if(Input.GetKeyDown(KeyCode.F5) || Input.GetKeyDown(KeyCode.B)){_PlayerHUD.SwitchBoxFromKeys("F5");}      //Build
 		else if(Input.GetKeyDown(KeyCode.F6) || Input.GetKeyDown(KeyCode.T)){_PlayerHUD.SwitchBoxFromKeys("F6");}      //Task

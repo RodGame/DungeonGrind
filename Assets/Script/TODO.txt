@@ -66,6 +66,37 @@ o Potion
 
 ==> SPELL TO ADD
 
+Menu
+http://www.jakel168.com/2010/09/how-to-make-mini-map-for-your-scene-in.html
+http://forum.unity3d.com/threads/72656-A-subwindow-for-the-second-camera-view
+
+
+
+Implement Deletage for Interact()
+using System;
+public class InteractableObject : MonoBehaviour
+{
+        public Action OnInteract;
+        public void Interact ()
+        {
+                if(OnInteract != null) OnInteract();
+        }
+}
+ 
+// your other script:
+public class InteractableTree : MonoBehaviour
+{
+        void Awake ()
+        {
+                var interactableObject = GetComponent<InteractableObject>();
+                interactableObject.OnInteract += InteractWithTree;
+        }
+        void InteractWithTree ()
+        {
+                Debug.Log("Insert tree-specific interaction here.");
+        }
+}
+
 
 
 

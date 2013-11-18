@@ -36,4 +36,9 @@ public class PrefabManager : MonoBehaviour {
 	public GameObject Environment_SpiderEggs;
 	public GameObject Environment_CartBroken;
 	public GameObject Environment_Cart;
+	
+	public GameObject NGUI_Task_TableTemplate;
+	public GameObject NGUI_Skill_SkillTemplate;
+	public GameObject NGUI_Build_BuildingTemplate;
+	public GameObject NGUI_Craft_ItemTemplate;
 }

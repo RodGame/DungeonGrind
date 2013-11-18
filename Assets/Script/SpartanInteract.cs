@@ -27,10 +27,16 @@ public class SpartanInteract : MonoBehaviour {
 	void Awake () {
 		_GameManager   = GameObject.FindGameObjectWithTag ("GameMaster").GetComponent<GameManager>();
 		_TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
-		_currentTask = SaveLoadSystem.Spartan_CurrentTask;
-		
-		_taskState   = SaveLoadSystem.Spartan_TaskState;
+		ReloadTaskState();
 		animation.animation.wrapMode = WrapMode.Loop;
+	}
+	
+	
+	public void ReloadTaskState()
+	{
+		SaveLoadSystem.LoadSpartanState ();
+		_currentTask = SaveLoadSystem.Spartan_CurrentTask;
+		_taskState   = SaveLoadSystem.Spartan_TaskState;	
 	}
 	
 	// Update is called once per frame
@@ -76,7 +82,7 @@ public class SpartanInteract : MonoBehaviour {
 	public void UnlockNextTask()
 	{
 		_currentTask++;
-		TaskName TaskIndex = (TaskName) Enum.Parse(typeof(TaskName), "Spartan" + _currentTask); 
+		TaskName TaskIndex = (TaskName) Enum.Parse(typeof(TaskName), "MainQuest" + _currentTask); 
 		
 		Character.TaskList[(int)TaskIndex].Unlock();
 		Character.SetActiveTask(Character.TaskList[(int)TaskIndex]);
@@ -89,6 +95,11 @@ public class SpartanInteract : MonoBehaviour {
 		// _taskState : -1 = No task, 0 = Task available, 1 = Task given. 2 = Task completed, reward available. 
 		if(_taskState == 0)
 		{
+			if(Character.TaskList[(int)TaskName.MainQuest0].IsUnlocked)
+			{
+				Character.TaskList[(int)TaskName.MainQuest0].Finish();
+			};
+			
 			UnlockNextTask();
 			DisplayTaskText();
 			_taskState = 1;
@@ -100,7 +111,7 @@ public class SpartanInteract : MonoBehaviour {
 		else if(_taskState == 2)
 		{
 			DisplayTaskText();
-			TaskName TaskIndex = (TaskName) Enum.Parse(typeof(TaskName), "Spartan" + _currentTask); 
+			TaskName TaskIndex = (TaskName) Enum.Parse(typeof(TaskName), "MainQuest" + _currentTask); 
 			Character.TaskList[(int)TaskIndex].Finish();
 			
 			_taskState = 0;
@@ -120,10 +131,10 @@ public class SpartanInteract : MonoBehaviour {
 				{
 					case 0:
 						ListOfStrings.Add("Hi there adventurer. I'm here to help you become stronger and upgrade the camp...");
-						ListOfStrings.Add("\n\n Prove me you're not useless and repair the cart behind me by equipping the hammer in your inventory.");
+						ListOfStrings.Add("\n\n Prove me you're not useless, take this hammer and repair the cart with it.");
 						break;
 					case 1:
-						ListOfStrings.Add("I told you to equipe the hammer in your inventory and repair the cart!!");
+						ListOfStrings.Add("I told you to equip the hammer in your inventory and repair the cart!!");
 						break;
 					case 2:
 						ListOfStrings.Add("Thanks for repairing the cart! It might be useful later.");
@@ -150,7 +161,7 @@ public class SpartanInteract : MonoBehaviour {
 				switch(_taskState)
 				{
 					case 0:
-						ListOfStrings.Add("You're better than I tought. I think you're read to try the first dungeon level...");
+						ListOfStrings.Add("You're better than I tought. I think you're read to try the first dungeon level. Take this sword...");
 						ListOfStrings.Add("Enter the crypt outside of the camp and enter the first level... Beware, those pesky spider can hurt!!");
 						break;
 					case 1:
@@ -158,6 +169,40 @@ public class SpartanInteract : MonoBehaviour {
 						break;
 					case 2:
 						ListOfStrings.Add("I knew you could do it!");
+						break;
+				}
+				break;
+			case 4:
+				switch(_taskState)
+				{
+					case 0:
+						ListOfStrings.Add("I hope this wasn't too hard because I have more work for you!");
+						ListOfStrings.Add("I want you to kill 2 SpiderQueen for me. They appears in dungeon level 7 so  you will have to get there first!");
+						ListOfStrings.Add("I gave you a couple other mission to do while you get there.");
+						ListOfStrings.Add("You will get reward for INSTA mission right as you finish them, no need to come see me!");
+						break;
+					case 1:
+						ListOfStrings.Add("Still haven't kill the spiders ?");
+						break;
+					case 2:
+						ListOfStrings.Add("This is quite impressive, those spider gave me trouble last time I went there.");
+						break;
+				}
+				break;
+			case 5:
+				switch(_taskState)
+				{
+					case 0:
+						ListOfStrings.Add("I hope this wasn't too hard because I have more work for you!");
+						ListOfStrings.Add("I want you to kill 2 SpiderQueen for me. They appears in dungeon level 7 so  you will have to get there first!");
+						ListOfStrings.Add("I gave you a couple other mission to do while you get there.");
+						ListOfStrings.Add("You will get reward for INSTA mission right as you finish them, no need to come see me!");
+						break;
+					case 1:
+						ListOfStrings.Add("Kill those damn skeletons plz!");
+						break;
+					case 2:
+						ListOfStrings.Add("Still need to kill the king!!");
 						break;
 				}
 				break;

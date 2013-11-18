@@ -170,6 +170,12 @@ static class SaveLoadSystem {
 			PlayerPrefs.SetFloat("BuildingCreated_" + i + "_rotationW", BuildSystem.CreatedBuildingList[i].transform.rotation.w);	
 		}
 		
+		// Save Number of building created
+		for(int i = 0; i < Inventory.BuildingList.Length; i++)
+		{
+			PlayerPrefs.SetInt("Building_NbrCreated_" + i, Inventory.BuildingList[i].NbrBuilt);
+		}
+		
 	}
 	
 	static public void Load()
@@ -230,7 +236,7 @@ static class SaveLoadSystem {
 			}
 			Character.UpdateStats();
 			
-			// Save Ressource
+			// Load Ressource
 			for(int i = 0; i < Inventory.RessourceList.Length; i++)
 			{
 				Inventory.RessourceList[i].CurValue = PlayerPrefs.GetInt ("RessourceCur_" + Inventory.RessourceList[i].Name);
@@ -291,14 +297,26 @@ static class SaveLoadSystem {
 				}
 			}
 			
-			//Load Spartan State
-			Spartan_TaskState   = PlayerPrefs.GetInt("Spartan_TaskState");
-			Spartan_CurrentTask = PlayerPrefs.GetInt("Spartan_CurrentTask");
+
+			
+			// Load Nbr building created
+			for(int i = 0; i < Inventory.BuildingList.Length; i++)
+			{
+				Inventory.BuildingList[i].NbrBuilt = PlayerPrefs.GetInt("Building_NbrCreated_" + i);
+			}
+				
 			
 			// Load buildings
 			LoadBuildings();
 			
 		}
+	}
+	
+	static public void LoadSpartanState()
+	{
+		//Load Spartan State
+		Spartan_TaskState   = PlayerPrefs.GetInt("Spartan_TaskState");
+		Spartan_CurrentTask = PlayerPrefs.GetInt("Spartan_CurrentTask");	
 	}
 	
 	static public void LoadBuildings()

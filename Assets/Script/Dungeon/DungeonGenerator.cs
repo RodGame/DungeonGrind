@@ -185,8 +185,8 @@ static private int[,] CreateDungeonHalls(int[,] _dungeonMap, int _sizeX,int _siz
 		}
 		
 		// randomize corridor portion and height
-		int _hallWidth  = Random.Range (4,10);
-		int _hallHeight = Random.Range (4,10);
+		int _hallWidth  = Random.Range (8,14);
+		int _hallHeight = Random.Range (8,14);
 		
 		//Create vertical part of the hall
 		for(int i = _x1; i != _x1 + _xDirection*_hallWidth; i += _xDirection)

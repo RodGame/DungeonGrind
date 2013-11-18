@@ -7,6 +7,7 @@ public class CampManager : MonoBehaviour {
 	void Start () {
 		BuildSystem.SpawnAllBuilding();
 		BuildSystem.SpawnCart();
+		
 		BuildSystem.BuildState = 0;
 		GameObject.FindGameObjectWithTag ("GameMaster").GetComponent<GameManager>().ChangeState("Play");
 		

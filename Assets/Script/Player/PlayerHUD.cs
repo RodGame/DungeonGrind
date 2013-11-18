@@ -15,6 +15,7 @@ public class PlayerHUD : MonoBehaviour {
 	private Vector2     _MousePosOnClick;
 	private int 		_inventorySlotClicked;
 	private TextureManager _TextureManager;
+	private NGUI_HUD _NGUI_HUD;
 	
 	private const float _FLOATING_RECT_OPACITY = 0.8f;
 	private const int _LINE_HEIGHT = 25;
@@ -43,6 +44,7 @@ public class PlayerHUD : MonoBehaviour {
 	private float invSlot_offset = 10;
 	private bool[] _buttonToggle = new bool[7] {false, false, false, false, false, true, false};
 	private int[,] _mapToDisplay;
+	private bool _isUseNGUI = true;
 	
 	private string objectRaycastCollided;
 	private string ToDisplayInBox;
@@ -56,6 +58,8 @@ public class PlayerHUD : MonoBehaviour {
 	public Texture textureProg;
 	public Texture textureProgBackground;
 	public Texture WhiteTexture;
+	
+	//private GameObject NGUI_TaskList;
 	
 	public DungeonParameters DungeonToGenerate;
 	
@@ -73,7 +77,9 @@ public class PlayerHUD : MonoBehaviour {
 		_GameManager  = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 		_PlayerCam    = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<Camera>();
 		_TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
-		ToDisplayInBox = "StatList";
+		_NGUI_HUD       = GameObject.FindGameObjectWithTag("NGUI").GetComponent<NGUI_HUD>();
+		
+		ToDisplayInBox = "TaskList";
 		_chatLogListString = new List<string>();
 			
 		invSlot_sizeX  = _boxSizeX/15;
@@ -82,6 +88,8 @@ public class PlayerHUD : MonoBehaviour {
 		DungeonToGenerate.level = 1;
 		DungeonToGenerate.isHardcore    = false;
 		DungeonToGenerate.isWave        = false;
+		
+		//NGUI_TaskList =  GameObject.Find("Anchor(Task)").gameObject;
 	}
 	
 	void Update()
@@ -90,7 +98,6 @@ public class PlayerHUD : MonoBehaviour {
 		{
 			UpdateKnownMap();	
 		}
-		Debug.Log (ToDisplayInBox);
 		
 	}
 	
@@ -126,15 +133,25 @@ public class PlayerHUD : MonoBehaviour {
 		Array.Copy (_dungeonMap, _mapToDisplay, _mapSizeX * _mapSizeZ);
 	}
 	
+	public void StartHUD()
+	{
+		if(ToDisplayInBox == "None")
+		{
+			ToDisplayInBox = "TaskList";	
+		}
+		ChangeBoxView(ToDisplayInBox);
+		_GameManager.ChangeState("Menu");
+	}
+	
 	void OnGUI()
 	{
 		GUI.skin.button.wordWrap = true;
 		GUI.skin.box.wordWrap    = true;
-		GUI.skin.label.wordWrap = true;		
-	
+		GUI.skin.label.wordWrap = true;
+		
 		if(_GameManager.CurState == "Menu")
 		{
-			DisplayBox();
+			DisplayHUD();
 		}
 		
 		if(_isDisplayFloatingMenu == true)
@@ -175,6 +192,19 @@ public class PlayerHUD : MonoBehaviour {
 		}
 	}
 	
+	private void DisplayHUD()
+	{
+		if(_isUseNGUI && (ToDisplayInBox == "TaskList" || ToDisplayInBox == "SkillList"))
+		{
+			//_NGUI_HUD.Display(ToDisplayInBox);
+		}
+		else
+		{
+			DisplayBox();
+		}	
+		
+	}
+	
 	private void DisplayTaskObjective()
 	{
 		if(Application.loadedLevelName == "Dungeon")
@@ -192,7 +222,7 @@ public class PlayerHUD : MonoBehaviour {
 	{
 		if(Character.ActiveTask != null)
 		{
-			GUI.Label (new Rect(_POSX, _boxPosY + _boxSizeY , 500 , _LINE_HEIGHT),"Active Task : " + Character.ActiveTask.Definition);
+			GUI.Label (new Rect(_POSX, _boxPosY + _boxSizeY , 500 , _LINE_HEIGHT),"Active Task : " + Character.ActiveTask.Title);
 		}
 		else
 		{
@@ -231,7 +261,6 @@ public class PlayerHUD : MonoBehaviour {
 			{
 				ItemInventory.UnequipWeapon();
 			}
-			
 		}
 		_mouseOver = GUI.tooltip;
 	}
@@ -318,11 +347,9 @@ public class PlayerHUD : MonoBehaviour {
 		if(_mouseOver == ("mouseOverOnEquippedWeapon"))
 		{
 			List<string> ListEquippedWeaponToDisplay = CreateListInventoryItem(ItemInventory.EquippedWeapon);
-			Debug.Log (ListEquippedWeaponToDisplay[0]);
 			if(ItemInventory.EquippedWeapon != null)
 			{
 				DisplayFloatingLabels(ListEquippedWeaponToDisplay);
-				Debug.Log ("Should Display");
 			}
 		}
 		
@@ -370,7 +397,7 @@ public class PlayerHUD : MonoBehaviour {
 			}
 			else if(objectRaycastCollided == "CartBroken")
 			{
-				if(Character.TaskList[(int)TaskName.Spartan1].IsUnlocked)
+				if(Character.TaskList[(int)TaskName.MainQuest1].IsUnlocked) // Only allow interaction with cart on first quest
 				{
 					if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer])
 					{
@@ -428,11 +455,8 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayBox()
 	{
-		if(ToDisplayInBox != "Help")
-		{
-			GUI.Box(new Rect(_boxPosX, _boxPosY, _boxSizeX, _boxSizeY),"");
-		}
-		DisplayInBox (ToDisplayInBox);
+		GUI.Box(new Rect(_boxPosX, _boxPosY, _boxSizeX, _boxSizeY),"");
+		DisplayInBox(ToDisplayInBox);
 	}
 	
 	public  void EnableButtonInHUD(int _buttonPos)
@@ -481,25 +505,42 @@ public class PlayerHUD : MonoBehaviour {
 		
 		if(GUI.Button(new Rect(_POSX, (_LINE_HEIGHT)*15, _buttonX, _LINE_HEIGHT), "F10 Help"))  {ChangeBoxView("Help");}
 	}
+	
+	// Change the menu tab to be displayed
 	public  void ChangeBoxView(string _newBoxToShow)
 	{
+		// This prevent the opening of the HUD while building
 		if(BuildSystem.BuildState == 0)
 		{
+			//Debug.Log (ToDisplayInBox);
+			//Debug.Log (_GameManager.LastState);
+			// If the player us a control to open the currently opened window, close it.
 			if(ToDisplayInBox == _newBoxToShow && _GameManager.LastState == "Menu")
 			{
-				CloseDisplayBox();
+				Debug.Log ("Window Closed");
+				CloseHUD();
 			} 
-			else 
+			else //Otherwise, open the window.
 			{
-				_GameManager.ChangeState ("Menu");
 				ToDisplayInBox = _newBoxToShow;
+				if(ToDisplayInBox == "TaskList" || ToDisplayInBox == "SkillList")
+				{
+					_NGUI_HUD.UpdateHUD(ToDisplayInBox);
+					_NGUI_HUD.Display(ToDisplayInBox);
+				}
+				else
+				{
+					_NGUI_HUD.CloseAll ();
+				}
+				_GameManager.ChangeState ("Menu");
 			}
 		}
 	}
 	
-	public void CloseDisplayBox()
+	public void CloseHUD()
 	{
 		_GameManager.ChangeState ("Play");
+		_NGUI_HUD.CloseAll();
 	}
 	
 	public  void SwitchBoxFromKeys(string _keyPressed)
@@ -523,7 +564,7 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayInBox(string _toDisplay)
 	{
-		Debug.Log ("To Show : " + _toDisplay);
+		
 		switch(_toDisplay)
 		{
 		
@@ -535,7 +576,7 @@ public class PlayerHUD : MonoBehaviour {
 					if(GUI.Button(new Rect(_boxPosX + 25, _boxPosY + (i+1) * (_LINE_HEIGHT+10)    , _buttonX, _LINE_HEIGHT), new GUIContent(Inventory.WeaponList[i].Name, "mouseOverOnItemToCraft_" + Inventory.WeaponList[i].Name)))
 					{
 						CraftSystem.CraftItem (Inventory.WeaponList[i]);
-						CloseDisplayBox();
+						CloseHUD();
 					}
 				}
 			}
@@ -588,7 +629,7 @@ public class PlayerHUD : MonoBehaviour {
 			float _barRatio;
 			for(int i = 0; i <  Character.SkillList.Length; i++)
 			{
-				if(Character.SkillList[i].Unlocked == true)
+				if(Character.SkillList[i].IsUnlocked == true)
 				{
 					_barRatio = Character.SkillList[i].CurExp/100.0f;
 					GUI.Label 	   (new Rect(_boxPosX + 25 ,  _boxPosY + (_skillRowNbr+1)  * (_LINE_HEIGHT+10) , 300 , _LINE_HEIGHT),Character.SkillList[i].Name);
@@ -652,8 +693,7 @@ public class PlayerHUD : MonoBehaviour {
 		default:
 			Debug.LogWarning ("Wrong Display in PlayerHUD :" + _toDisplay);
 			break;
-		}	
-		
+		}
 	}
 	
 	private void DisplayHelp()
@@ -1016,7 +1056,7 @@ public class PlayerHUD : MonoBehaviour {
 		}
 		
 	}
-	
+		
 	private void DisplayTaskList()	
 	{
 		int _taskRowNbr = 0;
@@ -1028,7 +1068,7 @@ public class PlayerHUD : MonoBehaviour {
 				{
 					GUI.enabled = false;
 				}
-					GUI.Button(new Rect(_boxPosX + 25 ,  _boxPosY + (++_taskRowNbr+1)  * (_LINE_HEIGHT+10) , 500 , _LINE_HEIGHT),Character.TaskList[i].Definition);
+					GUI.Button(new Rect(_boxPosX + 25 ,  _boxPosY + (++_taskRowNbr+1)  * (_LINE_HEIGHT+10) , 500 , _LINE_HEIGHT),Character.TaskList[i].Description);
 					GUI.enabled = true;
 			}
 		}	

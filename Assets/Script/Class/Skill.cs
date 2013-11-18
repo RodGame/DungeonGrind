@@ -4,7 +4,7 @@ using System.Collections;
 public class Skill {
 	
 	private string _name;
-	private bool _unlocked;
+	private bool _isUnlocked;
 	private int  _level = 1;
 	private float  _curExp;
 	
@@ -15,10 +15,10 @@ public class Skill {
 		set {_name = value; }
 	}
 	
-	public bool Unlocked
+	public bool IsUnlocked
 	{
-		get {return _unlocked; }
-		set {_unlocked = value; }
+		get {return _isUnlocked; }
+		set {_isUnlocked = value; }
 	}
 	
 	public int Level

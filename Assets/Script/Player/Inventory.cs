@@ -35,7 +35,7 @@ static class Inventory {
 				BuildingList[i].Name            = "Crafting Table";
 				BuildingList[i].IsBuildable     = true;
 				BuildingList[i].IsUnlocked 		= true;
-				BuildingList[i].Recipe          = "15*Wood";
+				BuildingList[i].Recipe          = "25*Wood";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_CraftingTable;
 			}
 			else if(BuildingList[i].Name == "WoodenWall")
@@ -43,7 +43,7 @@ static class Inventory {
 				BuildingList[i].Name            = "Wooden Wall";
 				BuildingList[i].IsBuildable     = true;
 				BuildingList[i].IsUnlocked 		= true;
-				BuildingList[i].Recipe          = "10*Wood";
+				BuildingList[i].Recipe          = "12*Wood";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenWall;
 			}
 			else if(BuildingList[i].Name == "WoodenFence")
@@ -67,7 +67,7 @@ static class Inventory {
 				BuildingList[i].Name            = "Tent";
 				BuildingList[i].IsBuildable     = true;
 				BuildingList[i].IsUnlocked 		= true;
-				BuildingList[i].Recipe          = "15*Wood";
+				BuildingList[i].Recipe          = "10*Wood";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_Tent;
 			}
 		}
@@ -177,7 +177,7 @@ static class Inventory {
 			}
 			else if(RessourceList[i].Name == "Wood")
 			{
-				RessourceList[i].CurValue = 200;
+				RessourceList[i].CurValue = 100;
 				RessourceList[i].MaxValue = 1000;
 			}
 			/*else if(RessourceList[i].Name == "Gold")

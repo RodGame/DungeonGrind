@@ -6,12 +6,15 @@ using System;					  // For Enum
 public class Task {
 	
 	private string  _name;
-	private string  _definition;
+	private string  _title;
+	private string  _description;
 	private string  _reward;
 	private string  _requirement;
 	private bool  _isUnlocked = false;
 	private bool  _isFinished = false;
-	private GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster"  ).GetComponent<GameManager>();
+	private int   _missionType = 2; // 0 = Random Quest, 1 = Main Quest, 2 = Secondary Quest
+	private int   _missionId; // 2 mission can share the same Id if they have different Type
+	private GameManager _GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	
 	public string Name
 	{
@@ -19,10 +22,16 @@ public class Task {
 		set {_name = value; }
 	}
 	
-	public string Definition
+	public string Title
 	{
-		get {return _definition; }
-		set {_definition = value; }
+		get {return _title; }
+		set {_title = value; }
+	}
+	
+	public string Description
+	{
+		get {return _description; }
+		set {_description = value; }
 	}
 	
 	public string Reward
@@ -45,6 +54,18 @@ public class Task {
 	public bool IsFinished
 	{
 		get {return _isFinished; }
+	}
+	
+	public int MissionType
+	{
+		get {return _missionType; }
+		set {_missionType = value;}
+	}
+	
+	public int MissionId
+	{
+		get {return _missionId; }
+		set {_missionId = value;}
 	}
 	
 	public bool TestForCompletion()
@@ -83,7 +104,19 @@ public class Task {
 				case "[RESS]":
 					if(CraftSystem.TestRessource(_ExpenditureNeeded) == false) //Test if all ressources are available
 					{
+						_isTaskCompleted = false;
+					}
+					break;
+				
+				case "[KILL]":
+				
+					for(int j = 0; j <  _ExpenditureNeeded.Count; j++)
+					{
+						MonsterName MonsterIndex = (MonsterName) Enum.Parse(typeof(MonsterName), _ExpenditureNeeded[j].type); 
+						if( Bestiary.MonsterList[(int)MonsterIndex].NbrKilled < _ExpenditureNeeded[j].nbr)
+						{
 							_isTaskCompleted = false;
+						}
 					}
 					break;
 				
@@ -95,6 +128,22 @@ public class Task {
 						if( Inventory.WeaponList[(int)WeaponIndex].NbrCrafted  < _ExpenditureNeeded[j].nbr)
 						{
 							_isTaskCompleted = false;
+						}
+					}
+					break;
+				}
+				
+				case "[DUNG]":
+				{
+					for(int j = 0; j <  _ExpenditureNeeded.Count; j++)
+					{
+					
+						if(_ExpenditureNeeded[j].type == "Level")
+						{
+							if(_GameManager.MaxDungeonLevel < _ExpenditureNeeded[j].nbr)
+							{
+								_isTaskCompleted = false;	
+							}
 						}
 					}
 					break;
@@ -111,23 +160,37 @@ public class Task {
 	
 	public void Unlock()
 	{
-		this._isUnlocked = true;
+		_isUnlocked = true;
 		GA.API.Design.NewEvent("Task:" + this._name + ":IsUnlocked", Character.SkillList[(int)SkillName.Fighter].Level + Character.SkillList[(int)SkillName.IceMage].Level);
 	}
 	
 	public void Finish()
 	{
-		_GameManager.ClaimReward (this.Reward);
-		this._isFinished = true;
+		if(_isFinished == false)
+		{
+			_GameManager.ClaimReward (this.Reward);
+			_isFinished = true;
+		}
+		else
+		{
+		Debug.LogWarning ("[Task.Finish()] - Trying to finish an already finished task.");	
+		}
+		
 		GA.API.Design.NewEvent("Task:" + this._name + ":IsFinished", Character.SkillList[(int)SkillName.Fighter].Level + Character.SkillList[(int)SkillName.IceMage].Level);
 	}
 }
 
 // Enumeration of all Tasks
 public enum TaskName {
-	Spartan4,
-	Spartan3,
-	Spartan2,
-	Spartan1,
-	TaskIntro
+	MainQuest0,
+	MainQuest1,
+	MainQuest2,
+	MainQuest3,
+	MainQuest4,
+	MainQuest5
+	//MainQuest6,
+	//MainQuest7,
+	//MainQuest8,
+	//MainQuest9,
+	//MainQuest10
 }
