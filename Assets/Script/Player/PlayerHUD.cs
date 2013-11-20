@@ -170,7 +170,6 @@ public class PlayerHUD : MonoBehaviour {
 		DisplayChatLog();
 		DisplayEquippedWeapon();
 		DisplayActiveSpell();
-		//DisplayHP();
 		DisplayActiveTask();
 		DisplayTaskObjective();
 		if(_isDisplayFloatingMenu)
@@ -281,11 +280,6 @@ public class PlayerHUD : MonoBehaviour {
 			}
 			
 		}
-	}
-	
-	private void DisplayHP()
-	{
-		GUI.Label (new Rect(_POSX +_progBarLength + invSlot_sizeY*2.5f, 0.5f*_LINE_HEIGHT , invSlot_sizeX*2.0f, _LINE_HEIGHT      ),"HP : " + Character.CurHP);
 	}
 	
 	private void DisplayChatLog()
@@ -958,7 +952,7 @@ public class PlayerHUD : MonoBehaviour {
 		}
 	}
 
-	private void AbandonDungeon() //TODO: Probably to move somewhere else
+	private void AbandonDungeon()
 	{
 		DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();	
 		_DungeonManager.Abandon();
@@ -1068,7 +1062,7 @@ public class PlayerHUD : MonoBehaviour {
 				{
 					GUI.enabled = false;
 				}
-					GUI.Button(new Rect(_boxPosX + 25 ,  _boxPosY + (++_taskRowNbr+1)  * (_LINE_HEIGHT+10) , 500 , _LINE_HEIGHT),Character.TaskList[i].Description);
+					GUI.Button(new Rect(_boxPosX + 25 ,  _boxPosY + (++_taskRowNbr+1)  * (_LINE_HEIGHT+10) , 500 , _LINE_HEIGHT),Character.TaskList[i].Title);
 					GUI.enabled = true;
 			}
 		}	

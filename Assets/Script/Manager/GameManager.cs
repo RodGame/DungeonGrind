@@ -6,23 +6,32 @@ using System;					  // For Enum
 public class GameManager : MonoBehaviour {
 	
 	private PlayerHUD _PlayerHUD;
+	private Camera _PlayerCam;
+	private PrefabManager _PrefabManager;
 	private GameObject _Player;
 	private GameObject _PlayerMaster;
 	private GameObject _Spartan;
-	private Camera _PlayerCam;
 	private GameObject _CurObjectInteracted;
-	private PrefabManager _PrefabManager;
-	private float _curProgress = 0;
-	private string _curAction = "None";
-	private string _curZone   = "Camp";
-	public string _curState; //Menu, Play, Talk
-	public string _lastState;
-	private int    _discussionStep = 0;
 	private PlayerHUD.DungeonParameters _CurDungeonParameters;
 	private List<string> _discussionListString = new List<string>();
 	private Quaternion _originalRotation;
-	private int _maxDungeonLevel = 1;
-	private bool _testForTaskCompletion = false;
+	
+	private string _curAction  = "None";  // Current action being executed by the player (Fighting,Mining,Woodcutting...)
+	private string _curVersion = "0.38a"; // Current Version
+	private string _curZone    = "Camp";  // Current zone the player is in (Menu,Camp,Dungeon...)
+	private string _curState   = "Menu";  // Current State of the game (Menu, Play, Talk, Build)
+	private string _lastState  = "Menu";  // State at the end of the last frame
+	private float _curProgress    = 0;    // Current progress value 
+	private int   _discussionStep = 0;    // Current Discussion Step with Spartan 
+	private int _maxDungeonLevel  = 1;    // Maximum Dungeon Level
+	private bool _testForTaskCompletion = false; // Don't test task completion in the starting menu
+	
+	public string CurVersion
+	{
+		get {return _curVersion; }
+		set {_curVersion = value; }
+	}
+	
 	public string CurState
 	{
 		get {return _curState; }
@@ -79,126 +88,168 @@ public class GameManager : MonoBehaviour {
 	   _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	}
 	
-	// Use this for initialization. This is called after "Camp" is loaded
+	// Use this for initialization. This is called after "Camp" scene is loaded
 	public void IniGame () 
 	{
-		SaveLoadSystem.Load();
-		
+		// Initialize Game
+		SaveLoadSystem.Load(); // Load game
 		SkipTutorial();
-		Camera.mainCamera.GetComponent<Skybox>().material = GetComponent<TextureManager>().Material_Skybox_Camp;
 		ChangeState("Play");
-		Character.RefillHP ();
-		Character.RefillMP ();
+		_testForTaskCompletion = true;
 		
+		// Initialize Environment
+		Camera.mainCamera.GetComponent<Skybox>().material = GetComponent<TextureManager>().Material_Skybox_Camp;  // Set Skybox
 		BuildSystem.SpawnCart();
-		Character.TaskList[(int)TaskName.MainQuest0].Unlock();
-		Character.SetActiveTask(Character.TaskList[(int)TaskName.MainQuest0]);
+		
+		// Initialize Character
 		_Player.transform.position = new Vector3(0f,1.50f,-7.5f);
 		_Player.transform.rotation.SetLookRotation(Vector3.back); // This line doesn't work
-		_testForTaskCompletion = true;
-		//Debug.Log (_Player.transform.position);
-		//GameObject.FindGameObjectWithTag("Player").transform.rotation.SetLookRotation(Vector3.back);
+		Character.RefillHP (); // Make sure player has full HP
+		Character.RefillMP ();// Make sure player has full HP
+		
+		if(!SaveLoadSystem.IsSaveExist) // If there are no existing save
+		{
+			NewGame(); // Setup a new game
+		}
+	}
+	
+	// Initialize a new game.
+	private void NewGame()
+	{
+		Character.TaskList[(int)TaskName.MainQuest0].Unlock(); // Unlock the first quest
+		Character.SetActiveTask(Character.TaskList[(int)TaskName.MainQuest0]); // Set the first quest as active task
+		ItemInventory.EquipWeapon (Inventory.WeaponList[(int)WeaponName.RockSword]);
+		//ItemInventory.AddItem(Inventory.WeaponList[(int)WeaponName.Hammer]);
 	}
 	
 	// Update is called once per frame
 	void Update () {
+		
+		// Find the spartan if the current scene is the camp
 		if(_Spartan == null && Application.loadedLevelName == "Camp")
 		{
 			_Spartan = GameObject.FindGameObjectWithTag("Spartan");	
 		}
 		
+		// Update the bar when the is an action being done
 		if(_curAction != "None")
 		{
-			UpdateBar();
+			UpdateProgress();
 		}
+		
+		// Evaluate the position of the player to store the current zone in a variable
 		EvaluateZone();
 		
+		// 
 		if(_curState == "Talk")
 		{
-			if(Input.GetMouseButtonDown(0))
-			{
-				if(_discussionStep < _discussionListString.Count)
-				{
-					_PlayerHUD.ShowDiscussion(_discussionListString[_discussionStep]);
-					_discussionStep++;
-				}
-				else
-				{
-					_PlayerHUD.HideDiscussion();	
-					ChangeState ("Play");
-					_discussionStep = 0;
-				}
-			}
+			DoDiscussion();
 		}
 		
 		//Regenerate Mana for character
 		Character.RegenMP();
 		
-		//Loop trough all task to look for completion
+		// Prevent from testing for task completion in menu
 		if(_testForTaskCompletion)
 		{
-			TestForTaskCompletion();
+			TestForTaskCompletion(); //Loop trough all task to look for completion
 		}
 	}
 	
+	private void DoDiscussion()
+	{
+		// If Left click is pressed
+		if(Input.GetMouseButtonDown(0))
+			{
+				//Display all discussion step stored one by one
+				if(_discussionStep < _discussionListString.Count)
+				{
+					_PlayerHUD.ShowDiscussion(_discussionListString[_discussionStep]); // Display the frame and the text
+					_discussionStep++;
+				}
+				else
+				{
+					_PlayerHUD.HideDiscussion(); // Hid the discussion when all line have been displayed	
+					ChangeState ("Play");
+					_discussionStep = 0;
+				}
+			}	
+	}
+	
+	// Called at the end of the frame update
 	void LateUpdate()
 	{
-		_lastState = _curState;	
+		_lastState = _curState;	// Store the last state
 	}
 	
-	void UpdateBar() {
+	// Update the current progress
+	void UpdateProgress() {
 		
 		float _progressSpeed = 100.0f;
+                
+                if(_curAction != "Fighting" && _curAction != "Default" && _curAction != "Woodcutting" && _curAction != "Mining")
+                {
+                        if(ItemInventory.EquippedWeapon != null)
+                        {
+                                _progressSpeed = ItemInventory.EquippedWeapon.Speed;
+                        }
+                        
+                        if(Vector3.Distance(_CurObjectInteracted.transform.position, _Player.transform.position) < ItemInventory.EquippedWeapon.Range)
+                        {
+                                _curProgress = _curProgress + (_progressSpeed*Time.deltaTime);
+                                if(_curProgress >= 100)
+                                {
+                                        _curProgress =  _curProgress - 100;
+                                        CompleteAction();
+                                        _curAction = "None";
+                                        _curProgress = 0;
+                                }
+                        }
+                        else
+                        {
+                                _PlayerHUD.AddChatLog("[MISC] Action was not completed. Stay close to the object");
+                                _curAction = "None";
+                                _curProgress = 0;
+                        }
+                }
+                else
+                {
+                        if(ItemInventory.EquippedWeapon != null)
+                        {
+                                _progressSpeed = ItemInventory.EquippedWeapon.Speed;
+                        }
+                        
+                        _curProgress = _curProgress + (_progressSpeed*Time.deltaTime);
+                        if(ItemInventory.EquippedWeapon != null)
+                        {
+                                RotateEquippedWeapon();
+                        }
+                        
+                        
+                        if(_curProgress >= 100)
+                        {
+                                _curProgress =  0;
+                               CompleteAction();
+                                _curAction = "None";
+                                _curProgress = 0;
+                        }
+                }
+        }
+	
+	// Complete the current action
+	void CompleteAction()
+	{
+		if(_curAction != "Fighting")
+		{
+			Character.ProcAction(_curAction);
+			Inventory.ProcAction(_curAction);
+			_curAction = "None";
+			_curProgress =  0;
+		}
 		
-		if(_curAction != "Fighting" && _curAction != "Default" && _curAction != "Woodcutting" && _curAction != "Mining")
-		{
-			if(ItemInventory.EquippedWeapon != null)
-			{
-				_progressSpeed = ItemInventory.EquippedWeapon.Speed;
-			}
-			
-			if(Vector3.Distance(_CurObjectInteracted.transform.position, _Player.transform.position) < ItemInventory.EquippedWeapon.Range)
-			{
-				_curProgress = _curProgress + (_progressSpeed*Time.deltaTime);
-				if(_curProgress >= 100)
-				{
-					_curProgress =  _curProgress - 100;
-					CompleteBar();
-					_curAction = "None";
-					_curProgress = 0;
-				}
-			}
-			else
-			{
-				_PlayerHUD.AddChatLog("[MISC] Action was not completed. Stay close to the object");
-				_curAction = "None";
-				_curProgress = 0;
-			}
-		}
-		else
-		{
-			if(ItemInventory.EquippedWeapon != null)
-			{
-				_progressSpeed = ItemInventory.EquippedWeapon.Speed;
-			}
-			
-			_curProgress = _curProgress + (_progressSpeed*Time.deltaTime);
-			if(ItemInventory.EquippedWeapon != null)
-			{
-				RotateEquippedWeapon();
-			}
-			
-			
-			if(_curProgress >= 100)
-			{
-				_curProgress =  0;
-				CompleteBar();
-				_curAction = "None";
-				_curProgress = 0;
-			}
-		}
 	}
 	
+	// Basic animation of the Weapon on attack (90° Rotation back-and-forth)
 	private void RotateEquippedWeapon()
 	{
 		GameObject _GO_EquippedItem = GameObject.FindGameObjectWithTag("EquippedItem");
@@ -217,16 +268,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
-	void CompleteBar()
-	{
-		if(_curAction != "Fighting")
-		{
-			Character.ProcAction(_curAction);
-			Inventory.ProcAction(_curAction);
-		}
-		
-	}
-	
+	// Skip Tutorial and enable/give everthing that would've happen in tutorial (Function isn't really helpful/functionning in its current state)
 	void SkipTutorial()
 	{
 		GameObject[] _Gates;
@@ -255,6 +297,7 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
+	// Verify the requirement(kills,ressource..) for each unlocked task and finish them
 	void TestForTaskCompletion() //Todo, simplify this logic
 	{
 		for(int i = 0; i <  Character.TaskList.Length; i++)
@@ -272,6 +315,7 @@ public class GameManager : MonoBehaviour {
 		}			
 	}
 	
+	// Claim Reward(Item,Ressource, Unlocked Task) for completion of tasks
 	public void ClaimReward(string _taskReward)
 	{
 		char _differentTypeDelimiter  = ',';
@@ -351,6 +395,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Evaluate the position of the player to set _curZone
 	void EvaluateZone () 
 	{
 		
@@ -383,6 +428,7 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
+	// Open Dungeon Menu
 	public void OpenDungeonMenu()
 	{
 		if(_curState == "Play")
@@ -391,14 +437,16 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Start the dungeon by saving game and loading the Dungeon scene
 	public void StartDungeon(PlayerHUD.DungeonParameters _DungeonParametersSelected)
 	{
 		_CurDungeonParameters = _DungeonParametersSelected;
 		SaveLoadSystem.Save();
-		BuildSystem.CreatedBuildingList = new List<GameObject>();
+		BuildSystem.CreatedBuildingList = new List<GameObject>(); // Todo: This probably need to go somewhere else
 		Application.LoadLevel("Dungeon");
 	}
 	
+	// Change the dungeon state to Win/Lose/Abandon
 	public void ChangeDungeonState(string _newState)
 	{
 		DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();	
@@ -420,6 +468,7 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
+	// Toggle the menu between Menu/Play
 	public void ToggleMenu()
 	{
 		if(_curState == "Menu")
@@ -435,6 +484,7 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
+	// Change state, show/hide mouse and activate/deactivate control
 	public void ChangeState(string _newState)
 	{
 		if(_newState == "Menu")
@@ -479,6 +529,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Start a new discussion with Spartan
 	public void StartDiscussion(List<string> _ListStringToSay)
 	{
 		ChangeState("Talk");
@@ -486,8 +537,7 @@ public class GameManager : MonoBehaviour {
 		_discussionListString = _ListStringToSay;
 	}
 	
-	
-	
+	// Evaluated the raycast's collided object and start an action in consequence (Todo: This function should be split in different part. It's too big)
 	public void RaycastAnalyze(Collider _collidedObj)
 	{
 		//Debug.Log ("BuildState : " + BuildSystem.BuildState + ", _curState : " + _curState);
@@ -571,6 +621,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Evaluated the raycast's collided object to display information at mouse
 	public void RaycastAnalyzeAtMouse(Collider _collidedObj)
 	{
 		float _distanceInteraction = 5.0f;
@@ -619,6 +670,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Start a new action
 	public void DoAction(string _newAction)
 	{
 		if(_curState == "Play")
@@ -653,6 +705,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// On RightClick, cast a spell or take control of a building
 	public void RightClick(Collider _collidedObj)
 	{
 		float distanceBuild = 7.0f;
@@ -678,6 +731,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Attack a target : Damage it and give exp to the player
 	public void AttackTarget()
 	{
 		int _damageDealt = calculateDamage();
@@ -699,6 +753,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Calculate Damage dealt from the Weapon/Fighter skill
 	public int calculateDamage()
 	{
 		int _damageDealt;
@@ -716,6 +771,7 @@ public class GameManager : MonoBehaviour {
 		return _damageDealt;
 	}
 	
+	// Unique Action are particular action that shouldn't happen regularly
 	public void DoUniqueAction(string _actionToDo)
 	{
 		if(_curState == "Play")
@@ -739,16 +795,13 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	
+	// Activate menu button, this allow player to click them
 	public void ActivateButtonInHUD(int _buttonPos)
 	{
 		_PlayerHUD.EnableButtonInHUD(_buttonPos);
 	}
 	
-	public void AddItemToInventory(Weapon _WeaponToAdd)
-	{
-		ItemInventory.AddItem(_WeaponToAdd);
-	}
-	
+	// Display a line of text on the HUD
 	public void AddChatLogHUD(string _stringToAddChatLog)
 	{
 	
@@ -756,6 +809,7 @@ public class GameManager : MonoBehaviour {
 		
 	}
 	
+	// Enable an upgrade on the dungeon
 	public void UpgradeDungeon(DungeonUpgrade _UpgradeToEnable)
 	{
 		if(Inventory.RessourceList[(int)RessourceName.Coin].CurValue >= _UpgradeToEnable.CostCoin && Character.InfluencePoints >= _UpgradeToEnable.CostInfluence)

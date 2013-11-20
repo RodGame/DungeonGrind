@@ -261,7 +261,7 @@ public class SpartanInteract : MonoBehaviour {
 				if(!_isStateInteractedOnce)
 				{
 					
-					Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table //TODO: Move this in a real reward
+					Inventory.BuildingList[(int)BuildingName.CraftingTable].IsUnlocked = true; // Unlock the building of the Crafting Table
 					_isStateInteractedOnce = true;
 				}
 				else

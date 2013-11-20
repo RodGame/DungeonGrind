@@ -163,7 +163,6 @@ public class GA_Gui : MonoBehaviour
 			}
 			else
 			{
-				// GA_TODO: warning _topic and details must be filled out
 			}
 		}
     }

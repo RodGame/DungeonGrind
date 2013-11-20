@@ -52,7 +52,7 @@ static class DungeonLevelPool {
 				if(level >= 7) {_nbrSpiderQueen = level - 6;}
 				
 								 
-				DungeonLevelList[level].MonsterList = _nbrPseudoSpider + "*PseudoSpider+" + _nbrSpider + "*Spider+" + _nbrSpiderQueen + "*SpiderQueen";              //TODO [DROP] With droppable item
+				DungeonLevelList[level].MonsterList = _nbrPseudoSpider + "*PseudoSpider+" + _nbrSpider + "*Spider+" + _nbrSpiderQueen + "*SpiderQueen";
 				//DungeonLevelList[level - 1].Reward = level.ToString + "*InfluencePoints";
 				DungeonLevelList[level].SizeX = 40 + 8*level;
 				DungeonLevelList[level].SizeY = 40 + 8*level;
@@ -70,7 +70,7 @@ static class DungeonLevelPool {
 				_nbrSkeletonKing    = Mathf.RoundToInt((level - 15)*0.75f);
 				
 				
-				DungeonLevelList[level].MonsterList = _nbrPseudoSpider + "*PseudoSpider+" + _nbrSpider + "*Spider+" + _nbrSpiderQueen + "*SpiderQueen+" + _nbrSkeletonToon + "*SkeletonToon+" + _nbrSkeletonFighter + "*SkeletonFighter+" + _nbrSkeletonKing + "*SkeletonKing";              //TODO [DROP] With droppable item
+				DungeonLevelList[level].MonsterList = _nbrPseudoSpider + "*PseudoSpider+" + _nbrSpider + "*Spider+" + _nbrSpiderQueen + "*SpiderQueen+" + _nbrSkeletonToon + "*SkeletonToon+" + _nbrSkeletonFighter + "*SkeletonFighter+" + _nbrSkeletonKing + "*SkeletonKing";
 				//DungeonLevelList[level - 1].Reward = level.ToString + "*InfluencePoints";
 				DungeonLevelList[level].SizeX = 30 + 7*level;
 				DungeonLevelList[level].SizeY = 30 + 7*level;

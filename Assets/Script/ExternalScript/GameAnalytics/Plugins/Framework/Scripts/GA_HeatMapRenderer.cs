@@ -203,7 +203,6 @@ public class GA_HeatMapRenderer : MonoBehaviour
 
 	public void OnScaleChanged ()
 	{
-		//GA_TODO: change scale on particles
 		RecalculateHistogram();
 	}
 	

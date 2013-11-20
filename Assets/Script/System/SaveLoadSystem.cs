@@ -11,7 +11,7 @@ static class SaveLoadSystem {
 	
 	static public int Spartan_TaskState   = 0;
 	static public int Spartan_CurrentTask = 0;
-	
+	static public bool IsSaveExist;
 	
 	public struct BuildingInfo
 	{
@@ -21,6 +21,7 @@ static class SaveLoadSystem {
 		public Quaternion Rotation;
 	}
 	
+	// Save Game
 	static public void Save()
 	{
 		int _dummyForBool = 0;
@@ -31,7 +32,8 @@ static class SaveLoadSystem {
 		PlayerPrefs.SetInt ("IsSaveExist",1);
 		
 		//Save GameManager
-		PlayerPrefs.SetInt ("MaxDungeonLevel",_GameManager.MaxDungeonLevel);
+		PlayerPrefs.SetString ("SavedVersion"   , _GameManager.CurVersion);
+		PlayerPrefs.SetInt ("MaxDungeonLevel", _GameManager.MaxDungeonLevel);
 		
 		//Save Character
 		PlayerPrefs.SetInt ("InfluencePoints", Character.InfluencePoints);
@@ -150,6 +152,7 @@ static class SaveLoadSystem {
 		GameAnalyticsManager.SendDatas();
 	}
 	
+	// Save created building position
 	static public void SaveBuildings()
 	{
 		Debug.Log ("Saved " + BuildSystem.CreatedBuildingList.Count + " Buildings");
@@ -178,13 +181,22 @@ static class SaveLoadSystem {
 		
 	}
 	
+	// Test if a save is found 
+	static public void TestForSave()
+	{
+		IsSaveExist = PlayerPrefs.GetInt ("IsSaveExist") == 1;	
+	}
+	
+	// Load game
 	static public void Load()
 	{
+		TestForSave();
 		
-		if(PlayerPrefs.GetInt ("IsSaveExist") == 1) //If save exist
+		if(IsSaveExist) //If save exist
 		{
 			
 			// Load GameManager
+			_GameManager.CurVersion      = PlayerPrefs.GetString ("SavedVersion");
 			_GameManager.MaxDungeonLevel = PlayerPrefs.GetInt ("MaxDungeonLevel");
 			
 			// Load Character
@@ -321,7 +333,7 @@ static class SaveLoadSystem {
 	
 	static public void LoadBuildings()
 	{
-		if(PlayerPrefs.GetInt ("IsSaveExist") == 1) //If save exist
+		if(IsSaveExist) //If save exist
 		{
 			// Load Building created
 			BuildingInfo _DummyBuildingInfo = new BuildingInfo();

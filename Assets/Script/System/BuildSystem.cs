@@ -33,7 +33,7 @@ static class BuildSystem {
 		//_BuildingPosition = new Vector3(_PlayerTransform.transform.position.x + 5, _PlayerTransform.transform.position.y, _PlayerTransform.transform.position.z);
 		
 		List<Utility.ParsedString> _buildingRessourceNeeded  = new List<Utility.ParsedString>();	//Declare a list that contain all the ressource needed
-		_buildingRessourceNeeded = Utility.parseString(_BuildingToBuild.Recipe);//TODO: Update with GO from object instead of hardcoded craftingtable
+		_buildingRessourceNeeded = Utility.parseString(_BuildingToBuild.Recipe);
 		
 		if(CraftSystem.TestRessource(_buildingRessourceNeeded) == true) //Test if all ressources are available
 		{

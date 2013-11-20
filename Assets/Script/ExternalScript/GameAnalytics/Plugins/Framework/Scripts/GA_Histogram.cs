@@ -61,7 +61,6 @@ public class GA_Histogram
 			
 			//if(scale == HistogramScale.Linear)
 				scaleValue = d;
-			//GA_TODO: Enable log scale.
 			//else 
 			//	scaleValue = Mathf.Log(d);
 			

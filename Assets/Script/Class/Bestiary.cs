@@ -45,7 +45,7 @@ static class Bestiary {
 			}
 			else if(MonsterList[i].Name == "Spider")
 			{
-				MonsterList[i].Loot          = "[RESS]1*Coin";               //TODO [DROP] With droppable item
+				MonsterList[i].Loot          = "[RESS]1*Coin";             
 				MonsterList[i].Hp            = 90;
 				MonsterList[i].Damage        = 15;
 				//MonsterList[i].SpawnCd       = 1.0f;
@@ -65,7 +65,7 @@ static class Bestiary {
 			}
 			else if(MonsterList[i].Name == "SpiderQueen")
 			{
-				MonsterList[i].Loot          = "[RESS]1*Coin"; //TODO [DROP] With droppable item
+				MonsterList[i].Loot          = "[RESS]1*Coin";
 				MonsterList[i].Hp            = 175;
 				MonsterList[i].Damage        = 35;
 				//MonsterList[i].SpawnCd       = 1.0f;
@@ -85,7 +85,7 @@ static class Bestiary {
 			}
 			else if(MonsterList[i].Name == "SkeletonToon")
 			{
-				MonsterList[i].Loot          = "[RESS]2*Coin";               //TODO [DROP] With droppable item
+				MonsterList[i].Loot          = "[RESS]2*Coin"; 
 				MonsterList[i].Hp            = 150;
 				MonsterList[i].Damage        = 35;
 				//MonsterList[i].SpawnCd       = 1.0f;
@@ -105,7 +105,7 @@ static class Bestiary {
 			}
 			else if(MonsterList[i].Name == "SkeletonFighter")
 			{
-				MonsterList[i].Loot          = "[RESS]2*Coin";               //TODO [DROP] With droppable item
+				MonsterList[i].Loot          = "[RESS]2*Coin";
 				MonsterList[i].Hp            = 225;
 				MonsterList[i].Damage        = 45;
 				//MonsterList[i].SpawnCd       = 1.0f;
@@ -125,7 +125,7 @@ static class Bestiary {
 			}
 			else if(MonsterList[i].Name == "SkeletonKing")
 			{
-				MonsterList[i].Loot          = "[RESS]3*Coin";               //TODO [DROP] With droppable item
+				MonsterList[i].Loot          = "[RESS]3*Coin";
 				MonsterList[i].Hp            = 275;
 				MonsterList[i].Damage        = 60;
 				//MonsterList[i].SpawnCd       = 1.0f;

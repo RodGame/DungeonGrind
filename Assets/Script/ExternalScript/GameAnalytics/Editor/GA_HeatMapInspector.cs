@@ -160,7 +160,6 @@ public class GA_HeatMapInspector : Editor
 		EditorGUILayout.LabelField(" ", GUILayout.Width(155));
 		if(heatmap.Loading)
 		{
-			//GA_TODO: We never know how much data we are downloading right now. With a better index or a GetCount method we could estimate the download time.
 			/* //Progress bar doesn't really contain any info when we don't know how much data we are downloading
 			 * GUILayout.Box("",GUILayout.Height(50),GUILayout.Width(200));.
 			 * if(Event.current.type == EventType.Repaint)

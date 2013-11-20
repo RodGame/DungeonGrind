@@ -195,7 +195,7 @@ static class Character {
 				TaskList[i].Name = _taskName;
 				TaskList[i].Title = "Repair the broken cart behind Spartan";
 				TaskList[i].Description = "It seems like I need to repair that wreck. Why is he giving order to me?";
-				TaskList[i].Requirement = "None"; //TODO Adwd Misc requirements
+				TaskList[i].Requirement = "None";
 				TaskList[i].Reward = "[RESS]50*Wood";
 				TaskList[i].MissionType = 1;
 			}
@@ -205,7 +205,7 @@ static class Character {
 				TaskList[i].Title = "Build a crafting table";
 				TaskList[i].Description = "Now he wants me to build a crafting table. Well, at least that seems cool and last mission gave me some woods!";
 				TaskList[i].Requirement = "[BUIL]1*CraftingTable";
-				TaskList[i].Reward = "[DISS]Spartan,[RESS]20*Coin,[ITEM]1*RockSword";
+				TaskList[i].Reward = "[DISS]Spartan,[RESS]20*Coin";
 				TaskList[i].MissionType = 1;
 			}
 			else if(_taskName == "MainQuest3")
