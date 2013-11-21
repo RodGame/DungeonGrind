@@ -81,7 +81,7 @@ public class DungeonManager : MonoBehaviour{
 		IniDungeon(_mapSizeX, _mapSizeZ);
 		
 		// Spawn Dungeon
-		_dungeonMap = DungeonGenerator.SpawnDungeon(_mapSizeX,_mapSizeZ,_nbrOfSquareSpawned);
+		_dungeonMap = DungeonGenerator.SpawnDungeon(_mapSizeX,_mapSizeZ,_nbrOfSquareSpawned,_CurDungeonParameters);
 		
 		// Initialize P_Pathfinding and Player
 		IniPathfindGraph(_mapSizeX, _mapSizeZ);
@@ -132,7 +132,7 @@ public class DungeonManager : MonoBehaviour{
 	}
 	
 	// Find a random position in a room
-	private Vector2 FindRandomRoomPosition_TOMERGE(int[,] _mapRooms, int _sizeX, int _sizeZ, float _distanceFromWall)
+	private Vector2 FindRandomRoomPosition_TOMERGE(int[,] _mapRooms, int _sizeX, int _sizeZ, float _distanceFromWall, int _searchedValue)
 	{
 		int _tryCounter = 0;
 		int _tryCounterMax = 200;
@@ -140,11 +140,11 @@ public class DungeonManager : MonoBehaviour{
 		int _z = UnityEngine.Random.Range (1,_sizeZ-1);
 		int _distanceFromWallMap = Mathf.CeilToInt(_distanceFromWall);
 		
-		bool _isInRoom = false;
+		bool _isPositionFound = false;
 		
-		while(_isInRoom == false && _tryCounter < _tryCounterMax)
+		while(_isPositionFound == false && _tryCounter < _tryCounterMax)
 		{
-			_isInRoom = true;
+			_isPositionFound = true;
 			_x = UnityEngine.Random.Range (1,_sizeX-1);
 			_z = UnityEngine.Random.Range (1,_sizeZ-1);
 			
@@ -154,9 +154,9 @@ public class DungeonManager : MonoBehaviour{
 				{
 					if((i >= 0 && i <= _sizeX -1) && (j >= 0 && j <= _sizeZ -1))
 					{
-						if(_mapRooms[i,j] == 0)
+						if(_mapRooms[i,j] != _searchedValue)
 						{
-							_isInRoom = false;
+							_isPositionFound = false;
 						}
 					}
 				}
@@ -176,7 +176,7 @@ public class DungeonManager : MonoBehaviour{
 		Vector2 _newPosition;
 		
 		//Calculate a first position
-		_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall);
+		_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall, 1);
 		
 		//Only evaluate player distance if its above 0. This is used when the player is spawned.
 		if(_distanceSafeZone > 0.0f)
@@ -187,7 +187,35 @@ public class DungeonManager : MonoBehaviour{
 				
 			while(_isPlayerTooClose == true && _tryCounter < _tryCounterMax)
 			{
-				_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall);
+				_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall, 1);
+				_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
+				_tryCounter++;
+			}
+		}
+		return _newPosition;
+	}
+	
+	// Overloaded function that take a safezone distance fot the player as in input
+	public Vector2 FindRandomRoomPosition(int[,] _mapRooms, int _sizeX, int _sizeZ, float _distanceFromWall, float _distanceSafeZone, int _searchedValue)
+	{
+		int _tryCounter = 0;
+		int _tryCounterMax = 500;
+		bool _isPlayerTooClose;
+		Vector2 _newPosition;
+		
+		//Calculate a first position
+		_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall, _searchedValue);
+		
+		//Only evaluate player distance if its above 0. This is used when the player is spawned.
+		if(_distanceSafeZone > 0.0f)
+		{
+			Vector2 _playerPosition = new Vector2(_GO_Player.transform.position.x, _GO_Player.transform.position.z);
+			
+			_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
+				
+			while(_isPlayerTooClose == true && _tryCounter < _tryCounterMax)
+			{
+				_newPosition = FindRandomRoomPosition_TOMERGE(_mapRooms, _sizeX, _sizeZ, _distanceFromWall, _searchedValue);
 				_isPlayerTooClose = (Vector2.Distance (_newPosition,_playerPosition) <= _distanceSafeZone);
 				_tryCounter++;
 			}

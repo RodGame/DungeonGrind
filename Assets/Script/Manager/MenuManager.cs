@@ -20,7 +20,7 @@ public class MenuManager : MonoBehaviour {
 	private GameObject _Button_LoadGame;
 	private GameObject _Label_SaveInfo;
 	
-	private bool _isGameStarted = false;
+	//private bool _isGameStarted = false;
 	// Use this for initialization
 	void Start () {
 		
@@ -50,18 +50,18 @@ public class MenuManager : MonoBehaviour {
 			_Button_LoadGame.transform.FindChild ("Label").GetComponent<UILabel>().text = "[AAAAAA]Save not found. Can't load.[-]"; // Display the No Game found text
 		}
 		
-		UIEventListener.Get(_Button_NewGame ).onClick += NewGameDelegate;  // Add the NewGame  Delegate to the New  Game Button
-		UIEventListener.Get(_Button_LoadGame).onClick += LoadGameDelegate; // Add the LoadGame Delegate to the Load Game button
+		//UIEventListener.Get(_Button_NewGame ).onClick += NewGameDelegate;  // Add the NewGame  Delegate to the New  Game Button
+		//UIEventListener.Get(_Button_LoadGame).onClick += LoadGameDelegate; // Add the LoadGame Delegate to the Load Game button
 		
 		DisplaySaveInformation();
 	}
 	
 	// Remove Listener on disable of the gameobject
-	void OnDisable()
+	/*void OnDisable()
 	{
-		UIEventListener.Get(_Button_NewGame ).onClick -= NewGameDelegate;
-		UIEventListener.Get(_Button_LoadGame).onClick -= LoadGameDelegate;
-	}
+		//UIEventListener.Get(_Button_NewGame ).onClick -= NewGameDelegate;
+		//UIEventListener.Get(_Button_LoadGame).onClick -= LoadGameDelegate;
+	}*/
 	
 	void DisplaySaveInformation()
 	{
@@ -170,11 +170,12 @@ public class MenuManager : MonoBehaviour {
 		}
 	}*/
 	
+	
 	void NewGame()
 	{
-		if(_isGameStarted == false)
-		{
-			_isGameStarted = true;
+		//if(_isGameStarted == false) // TODO: This should be removed. It is there because the button double click instead of single-clicking. This should be fixed.
+		//{
+			//_isGameStarted = true;
 			PlayerPrefs.DeleteAll();
 			if(Input.GetKey(KeyCode.LeftShift))
 			{
@@ -184,7 +185,7 @@ public class MenuManager : MonoBehaviour {
 				Inventory.RessourceList[(int)RessourceName.Coin].CurValue = 1000;
 			}
 			StartGame();
-		}
+		//}
 		
 	}
 	void StartGame()

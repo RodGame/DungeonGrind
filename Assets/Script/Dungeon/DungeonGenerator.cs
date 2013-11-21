@@ -4,9 +4,10 @@ using System.Collections.Generic; // For List class;
 
 static class DungeonGenerator {
 	
-	static PrefabManager _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
+	static PrefabManager  _PrefabManager  = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	static TextureManager _TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
-	static Material _Material_BrickWall = _TextureManager.Material_Dungeon_BrickWall;
+	static DungeonManager _DungeonManager = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>();
+	static Material _Material_BrickWall   = _TextureManager.Material_Dungeon_BrickWall;
 	static List<WallsToCreate> _ListOfWallsToCreate = new List<WallsToCreate>();
 	static int _nbrRoom;
 	
@@ -25,7 +26,7 @@ static class DungeonGenerator {
     };	
 	
 	// Randomize configuration of dungeon and instantiate it
-	static public int[,] SpawnDungeon(int _sizeX,int _sizeZ, int _nbrSquareForGeneration)
+	static public int[,] SpawnDungeon(int _sizeX,int _sizeZ, int _nbrSquareForGeneration, PlayerHUD.DungeonParameters _DungeonParamaters) //TODO: DungeonParamaters shouldn't be in HUD
 	{	
 		int[,] _dungeonMap; // 2D Array of int that will hold the dungeon map information
 		
@@ -41,8 +42,31 @@ static class DungeonGenerator {
 		_ListOfWallsToCreate = EvaluateWallToBuild(_dungeonMap, _sizeX, _sizeZ); // Loop through the dungeon map to find all the wall that need to be created
 		InstantiateDungeonWalls(_ListOfWallsToCreate); // Instantiate all the wall found by the EvaluateWallToBuild function
 		
+		TestForDungeonClosed(_dungeonMap, _sizeX, _sizeZ, _DungeonParamaters.level); // Make sure its impossible to go from inside the dungeon to outside the dungeon. Make one test per dungeon level(Bigger dungeon have more chance of invisible walls)
+		
 		return _dungeonMap;
 	}
+	
+	static bool TestForDungeonClosed(int[,] _dungeonMap, int _sizeX, int _sizeZ, int _nbrOfTry) // Todo: Verify that this works
+	{
+		bool _isDungeonClosed = true;
+		
+		for(int i = 0; i < _nbrOfTry; i++)
+		{
+			Vector2 _RoomPosition    = _DungeonManager.FindRandomRoomPosition(_dungeonMap, _sizeX, _sizeZ, 1.0f, 0.0f,1); // Find a position inside a room
+			Vector2 _OutsidePosition = _DungeonManager.FindRandomRoomPosition(_dungeonMap, _sizeX, _sizeZ, 1.0f, 0.0f,0); // Find a position outside a room
+			Pathfinding.Node Node1 = AstarPath.active.GetNearest (new Vector3(_RoomPosition.x   , 1.0f,_RoomPosition.y   )).node;
+			Pathfinding.Node Node2 = AstarPath.active.GetNearest (new Vector3(_OutsidePosition.x, 1.0f,_OutsidePosition.y)).node;
+			if(Pathfinding.PathUtilities.IsPathPossible (Node1,Node2) == false)
+			{
+				CancelDungeonCreation();
+				Debug.Log ("Could go out");
+			}
+		}
+			
+		return _isDungeonClosed;
+	}
+	
 	
 	// Create the inputted number of square on the map
 	static int[,] CreateDungeonSquares(int _sizeX, int _sizeZ, int _squareNbr)
@@ -118,8 +142,8 @@ static class DungeonGenerator {
 		return _nbrRoomFound;
 	}
 	
-// Create a hall starting from each room, connecting to another room or corridor
-static private int[,] CreateDungeonHalls(int[,] _dungeonMap, int _sizeX,int _sizeZ, int nbrRoom)
+	// Create a hall starting from each room, connecting to another room or corridor
+	static private int[,] CreateDungeonHalls(int[,] _dungeonMap, int _sizeX,int _sizeZ, int nbrRoom)
 {
 	int _x1; // x coordinate of the starting position
 	int _z1; // z coordinate of the starting position
@@ -291,6 +315,7 @@ static private int[,] CreateDungeonHalls(int[,] _dungeonMap, int _sizeX,int _siz
 		if(vectorToAdd == 1)
 		{
 			vectorToAdd = 0; // Reinitialize vectorToAdd
+			CancelDungeonCreation();
 			Debug.LogWarning ("DungeonGenerator : Wall started but not ended");
 		}
 		
@@ -342,9 +367,9 @@ static private int[,] CreateDungeonHalls(int[,] _dungeonMap, int _sizeX,int _siz
 	
 	}
 	
+	// Reload a new dungeon when the created dungeon fail testing
 	static void CancelDungeonCreation()
 	{
-		Debug.Log ("CancelDungeon");
 		Application.LoadLevel("Dungeon");
 	}
 	
@@ -383,7 +408,7 @@ static private int[,] CreateDungeonHalls(int[,] _dungeonMap, int _sizeX,int _siz
 		
 		for(int i = 0; i < Mathf.RoundToInt(0.75f*_nbrRoomCreated); i++)
 		{
-			Vector2 _posXZ = GameObject.FindGameObjectWithTag("DungeonMaster").GetComponent<DungeonManager>().FindRandomRoomPosition(_dungeonMap, _sizeX, _sizeZ, 1.0f, 0.0f); 
+			Vector2 _posXZ = _DungeonManager.FindRandomRoomPosition(_dungeonMap, _sizeX, _sizeZ, 1.0f, 0.0f); 
 			Vector3 _newPos = new Vector3(_posXZ.x, 0.75f, _posXZ.y);
 			GameObject _GO_Created = GameObject.Instantiate(_PrefabManager.Environment_SpiderEggs, _newPos, Quaternion.identity) as GameObject;
 			_GO_Created.transform.localScale *= 1.25f;

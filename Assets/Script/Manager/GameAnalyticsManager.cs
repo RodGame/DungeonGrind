@@ -7,7 +7,6 @@ static class GameAnalyticsManager {
 	
 	static public void SendDatas()
 	{
-		Debug.Log ("Telemetry Sent");
 		//Send skills level
 		for(int i = 0; i < Character.SkillList.Length; i++)
 		{

@@ -93,7 +93,7 @@ public class Task {
 					for(int j = 0; j <  _ExpenditureNeeded.Count; j++)
 					{
 						BuildingName BuildingIndex = (BuildingName) Enum.Parse(typeof(BuildingName), _ExpenditureNeeded[j].type);  
-						Debug.Log (_ExpenditureNeeded[j].nbr + "/" + Inventory.BuildingList[(int)BuildingIndex].NbrBuilt + " " +  _ExpenditureNeeded[j].type);
+						//Debug.Log (_ExpenditureNeeded[j].nbr + "/" + Inventory.BuildingList[(int)BuildingIndex].NbrBuilt + " " +  _ExpenditureNeeded[j].type);
 						if( Inventory.BuildingList[(int)BuildingIndex].NbrBuilt  < _ExpenditureNeeded[j].nbr)
 						{
 							_isTaskCompleted = false;
