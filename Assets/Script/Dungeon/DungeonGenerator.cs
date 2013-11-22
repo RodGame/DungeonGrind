@@ -47,6 +47,7 @@ static class DungeonGenerator {
 		return _dungeonMap;
 	}
 	
+	// Find a random position in a room and outside the room. Make sure its impossible to make a path between them to prevent Opened-wall dungeon(bug)
 	static bool TestForDungeonClosed(int[,] _dungeonMap, int _sizeX, int _sizeZ, int _nbrOfTry) // Todo: Verify that this works
 	{
 		bool _isDungeonClosed = true;
@@ -282,7 +283,7 @@ static class DungeonGenerator {
 		{
 			for(int i = 0; i < _sizeX; i++) //Those conditions might be reevaluated
 			{
-				if(_map[i,j] == 1)
+				if(_map[i,j] != 0)
 				{
 					//Calculate numConnections
 					_numConnectionsX = CalculacteNumConnectionX(_map, _sizeX, i, j); // -1 = Left connection only, 0 = no X connections, 1 = Right  connection only, 2 = 2 X connections
@@ -299,12 +300,29 @@ static class DungeonGenerator {
 					{
 						//Debug.Log ("WalLX started");
 						_WallsToCreate.WallStart = new Vector2(i,j);
+						vectorToAdd = 1;
 					}
 					else if(_isWallInsideEndX || _isWallOutsideEndX)
 					{
-						//Debug.Log ("WalLX ended");
+						//Debug.Log ("WalLY ended");
 						_WallsToCreate.WallEnd = new Vector2(i,j);
-						_ListOfWalls.Add (_WallsToCreate);
+						if(_WallsToCreate.WallStart.y == _WallsToCreate.WallEnd.y)
+						{
+							vectorToAdd = 0;
+							_ListOfWalls.Add (_WallsToCreate);
+						}
+						else
+						{
+							CancelDungeonCreation();
+							Debug.Log ("Wall not perpendicular on the X axis");
+						}
+						
+						
+						
+						//Debug.Log ("WalLX ended");
+						//_WallsToCreate.WallEnd = new Vector2(i,j);
+						//_ListOfWalls.Add (_WallsToCreate);
+						//vectorToAdd = 0;
 						//Debug.Log ("Horizontal Wall : " + _WallsToCreate.WallStart + "To" + _WallsToCreate.WallEnd);
 					
 					}	
@@ -312,11 +330,12 @@ static class DungeonGenerator {
 			}
 		}
 		
+		// A wall was started on the X axis but no ended.
 		if(vectorToAdd == 1)
 		{
 			vectorToAdd = 0; // Reinitialize vectorToAdd
 			CancelDungeonCreation();
-			Debug.LogWarning ("DungeonGenerator : Wall started but not ended");
+			Debug.LogWarning ("DungeonGenerator : Wall started but not ended on X");
 		}
 		
 		// Find all verticall walls
@@ -339,30 +358,42 @@ static class DungeonGenerator {
 					// Identify start/end of vertical walls
 					if(_isWallInsideStartZ || _isWallOutsideStartZ) // Start/ending of a wall
 					{
-						if(vectorToAdd == 0)
-						{
+						//if(vectorToAdd == 0)
+						//{
+							vectorToAdd = 1;
 							//Debug.Log ("WalLY started");
 							_WallsToCreate.WallStart = new Vector2(i,j);
-						}
+						//}
 					}
 					else if(_isWallInsideEndZ || _isWallOutsideEndZ)
 					{
 						//Debug.Log ("WalLY ended");
 						_WallsToCreate.WallEnd = new Vector2(i,j);
-						if(_WallsToCreate.WallStart.x == _WallsToCreate.WallEnd.x || _WallsToCreate.WallStart.y == _WallsToCreate.WallEnd.y)
+						if(_WallsToCreate.WallStart.x == _WallsToCreate.WallEnd.x)
 						{
+							vectorToAdd = 0;
 							_ListOfWalls.Add (_WallsToCreate);
 						}
 						else
 						{
 							CancelDungeonCreation();
+							Debug.Log ("Wall not perpendicular on the Y axis");
 						}
 						//Debug.Log ("Vertical Wall : " + _WallsToCreate.WallStart + "To" + _WallsToCreate.WallEnd);
 					}	
 				}		
 			}
 		}
-		//Debug.Log (_ListOfWalls.Count + "Walls to create");
+		
+		
+		// A wall was started on the X axis but no ended.
+		if(vectorToAdd == 1)
+		{
+			vectorToAdd = 0; // Reinitialize vectorToAdd
+			CancelDungeonCreation();
+			Debug.LogWarning ("DungeonGenerator : Wall started but not ended on Y");
+		}
+		
 		return _ListOfWalls;
 	
 	}

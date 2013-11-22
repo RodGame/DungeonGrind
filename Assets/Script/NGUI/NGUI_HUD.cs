@@ -56,6 +56,7 @@ public class NGUI_HUD : MonoBehaviour {
 		}
 	}
 	
+	// Update all the game object in the TaskList panel
 	private void UpdateTaskList()
 	{
 		GameObject _TaskTable = _panelTask.transform.FindChild("Task Log/SubPanelTask/TaskTable").gameObject;
@@ -102,6 +103,7 @@ public class NGUI_HUD : MonoBehaviour {
 		}
 	}
 	
+	// Update all the game object in the SkillList panel
 	private void UpdateSkillList()
 	{
 		GameObject _SkillTable = _panelSkill.transform.FindChild("Skill List/SubPanelSkill/SkillTable").gameObject;
