@@ -193,16 +193,15 @@ public class SpartanInteract : MonoBehaviour {
 				switch(_taskState)
 				{
 					case 0:
-						ListOfStrings.Add("I hope this wasn't too hard because I have more work for you!");
-						ListOfStrings.Add("I want you to kill 2 SpiderQueen for me. They appears in dungeon level 7 so  you will have to get there first!");
-						ListOfStrings.Add("I gave you a couple other mission to do while you get there.");
-						ListOfStrings.Add("You will get reward for INSTA mission right as you finish them, no need to come see me!");
+						ListOfStrings.Add("I think those spiders are getting too easy for you.");
+						ListOfStrings.Add("Your next quest will require you to upgrade the dungeon with the Skeleton Crypt");
+						ListOfStrings.Add("After that, try to kill a Skeleton Toon at level 11 and above.");
 						break;
 					case 1:
-						ListOfStrings.Add("Kill those damn skeletons plz!");
+						ListOfStrings.Add("Don't forget to upgrade the dungeon with Skelton Crypt before killing a Skeleton Toon!!");
 						break;
 					case 2:
-						ListOfStrings.Add("Still need to kill the king!!");
+						ListOfStrings.Add("Congratulation, you finished the MainQuest!");
 						break;
 				}
 				break;

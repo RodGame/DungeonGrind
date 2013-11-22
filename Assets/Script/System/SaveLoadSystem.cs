@@ -155,7 +155,7 @@ static class SaveLoadSystem {
 	// Save created building position
 	static public void SaveBuildings()
 	{
-		Debug.Log ("Saved " + BuildSystem.CreatedBuildingList.Count + " Buildings");
+		//Debug.Log ("Saved " + BuildSystem.CreatedBuildingList.Count + " Buildings");
 		
 		// Save Building created
 		PlayerPrefs.SetInt("BuildingCreated_numberBuilding", BuildSystem.CreatedBuildingList.Count);

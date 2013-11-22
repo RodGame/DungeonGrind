@@ -117,7 +117,6 @@ public class MenuManager : MonoBehaviour {
 	// Delegate called when the Load Game button is clicked
 	void LoadGameDelegate(GameObject _ButtonClicked)
 	{
-		Debug.Log ("Loaded Game");
 		if(PlayerPrefs.GetInt ("IsSaveExist") == 1) //If save exist
 		{
 			StartGame();

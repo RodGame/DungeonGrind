@@ -27,7 +27,7 @@ public class DungeonManager : MonoBehaviour{
 	private AstarPath  _Astar;
 	private PlayerHUD.DungeonParameters _CurDungeonParameters;
 	private bool _isDungeonStarted = false;
-	private bool _isUseNGUI = true;
+	//private bool _isUseNGUI = true;
 	
 	public GameObject _TEST_PET;
 	public int[,] DungeonMap

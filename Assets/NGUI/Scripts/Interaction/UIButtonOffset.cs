@@ -56,7 +56,7 @@ public class UIButtonOffset : MonoBehaviour
 				(UICamera.IsHighlighted(gameObject) ? mPos + hover : mPos)).method = UITweener.Method.EaseInOut;
 		}
 	}
-	
+
 	void OnHover (bool isOver)
 	{
 		if (enabled)
