@@ -351,7 +351,7 @@ static public class NGUIText
 			}
 
 			// When encoded symbols such as [RrGgBb] or [-] are encountered, skip past them
-			if (ParseSymbol(text, ref offset)) continue;
+			if (ParseSymbol(text, ref offset)) { --offset; continue; }
 
 			int glyphWidth = 0;
 			if (font.GetCharacterInfo(ch, out mTempChar, size, style))

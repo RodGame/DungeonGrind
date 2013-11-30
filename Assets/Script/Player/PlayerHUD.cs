@@ -11,7 +11,7 @@ public class PlayerHUD : MonoBehaviour {
 	private GameObject  _Player;
 	private Camera      _PlayerCam;
 	private GameObject  _PlayerMaster;
-	private Weapon        _ItemClicked;
+	private Weapon      _ItemClicked;
 	private Vector2     _MousePosOnClick;
 	private int 		_inventorySlotClicked;
 	private TextureManager _TextureManager;
@@ -44,8 +44,8 @@ public class PlayerHUD : MonoBehaviour {
 	private float invSlot_offset = 10;
 	private bool[] _buttonToggle = new bool[7] {false, false, false, false, false, true, false};
 	private int[,] _mapToDisplay;
-	private bool _isUseNGUI = true;
-	
+	private bool _isUseNGUI;
+	private List<string> _WindowsUsingNGUI = new List<string> { "TaskList", "SkillList", "BuildList"};
 	private string objectRaycastCollided;
 	private string ToDisplayInBox;
 	private string _mouseOver;
@@ -77,7 +77,7 @@ public class PlayerHUD : MonoBehaviour {
 		_GameManager  = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 		_PlayerCam    = GameObject.FindGameObjectWithTag("MainCamera").GetComponentInChildren<Camera>();
 		_TextureManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<TextureManager>();
-		_NGUI_HUD       = GameObject.FindGameObjectWithTag("NGUI").GetComponent<NGUI_HUD>();
+		_NGUI_HUD       = GameObject.FindGameObjectWithTag("NGUI_Menu").GetComponent<NGUI_HUD>();
 		
 		ToDisplayInBox = "TaskList";
 		_chatLogListString = new List<string>();
@@ -90,6 +90,8 @@ public class PlayerHUD : MonoBehaviour {
 		DungeonToGenerate.isWave        = false;
 		
 		//NGUI_TaskList =  GameObject.Find("Anchor(Task)").gameObject;
+		_isUseNGUI = true;
+		
 	}
 	
 	void Update()
@@ -167,7 +169,12 @@ public class PlayerHUD : MonoBehaviour {
 			DisplayCursor();
 		}
 		DisplayFloatingBox();
-		DisplayChatLog();
+		
+		if(!(ToDisplayInBox == "BuildList" && _GameManager.CurState == "Menu"))
+		{
+			DisplayChatLog();
+		}
+		
 		DisplayEquippedWeapon();
 		DisplayActiveSpell();
 		DisplayActiveTask();
@@ -193,7 +200,7 @@ public class PlayerHUD : MonoBehaviour {
 	
 	private void DisplayHUD()
 	{
-		if(_isUseNGUI && (ToDisplayInBox == "TaskList" || ToDisplayInBox == "SkillList"))
+		if(_isUseNGUI && _WindowsUsingNGUI.Contains(ToDisplayInBox))
 		{
 			//_NGUI_HUD.Display(ToDisplayInBox);
 		}
@@ -511,13 +518,12 @@ public class PlayerHUD : MonoBehaviour {
 			// If the player us a control to open the currently opened window, close it.
 			if(ToDisplayInBox == _newBoxToShow && _GameManager.LastState == "Menu")
 			{
-				Debug.Log ("Window Closed");
 				CloseHUD();
 			} 
 			else //Otherwise, open the window.
 			{
 				ToDisplayInBox = _newBoxToShow;
-				if(ToDisplayInBox == "TaskList" || ToDisplayInBox == "SkillList")
+				if(_isUseNGUI && _WindowsUsingNGUI.Contains(ToDisplayInBox))
 				{
 					_NGUI_HUD.UpdateHUD(ToDisplayInBox);
 					_NGUI_HUD.Display(ToDisplayInBox);
@@ -794,7 +800,6 @@ public class PlayerHUD : MonoBehaviour {
 					_isManaLeveling = true;
 					break;
 			}
-			Debug.Log (_boolToActivate);
 			MagicBook.CompToLevelOnSpell = _boolToActivate;
 		}
 		

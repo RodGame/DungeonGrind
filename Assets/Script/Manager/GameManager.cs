@@ -592,8 +592,7 @@ public class GameManager : MonoBehaviour {
 								case "Gate":
 									_PlayerMaster.GetComponent<PlayerHUD>().AddChatLog("[MISC] The door won't open. Maybe spartan know something about this.");	
 									break;
-								case "CartBroken":	
-									Debug.Log ("CartBroken");
+								case "CartBroken":
 									if(ItemInventory.EquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer] && Character.TaskList[(int)TaskName.MainQuest1].IsUnlocked == true)
 									{
 										Debug.Log("Repaired");

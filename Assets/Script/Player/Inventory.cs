@@ -33,42 +33,130 @@ static class Inventory {
 			if(BuildingList[i].Name == "CraftingTable")
 			{
 				BuildingList[i].Name            = "Crafting Table";
-				BuildingList[i].IsBuildable     = true;
+				BuildingList[i].Type            = "Utility";
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "25*Wood";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_CraftingTable;
 			}
+			else if(BuildingList[i].Name == "WoodStorage")
+			{
+				BuildingList[i].Name            = "Wood Storage";
+				BuildingList[i].Type            = "Storage";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "30*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodStorage;
+			}
+			else if(BuildingList[i].Name == "WoodenBarrel")
+			{
+				BuildingList[i].Name            = "Wooden Barrel";
+				BuildingList[i].Type            = "Storage";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "12*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenBarrel;
+			}
 			else if(BuildingList[i].Name == "WoodenWall")
 			{
 				BuildingList[i].Name            = "Wooden Wall";
-				BuildingList[i].IsBuildable     = true;
+				BuildingList[i].Type            = "Structural";
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "12*Wood";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenWall;
 			}
-			else if(BuildingList[i].Name == "WoodenFence")
+			else if(BuildingList[i].Name == "WoodenFence01")
 			{
-				BuildingList[i].Name            = "Wooden Fence";
-				BuildingList[i].IsBuildable     = true;
+				BuildingList[i].Name            = "Wooden Fence [A]";
+				BuildingList[i].Type            = "Structural";
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "5*Wood";
-				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenFence;
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenFence01;
 			}
-			else if(BuildingList[i].Name == "WoodenFenceCurve")
+			else if(BuildingList[i].Name == "WoodenFence01Curve")
 			{
-				BuildingList[i].Name            = "Wooden Fence Curve";
-				BuildingList[i].IsBuildable     = true;
+				BuildingList[i].Name            = "Wooden Fence [A-Curve]";
+				BuildingList[i].Type            = "Structural";
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "5*Wood";
-				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenFenceCurve;
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenFence01Curve;
+			}
+			else if(BuildingList[i].Name == "WoodenFence02")
+			{
+				BuildingList[i].Name            = "Wooden Fence [B]";
+				BuildingList[i].Type            = "Structural";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "5*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenFence02;
+			}
+			else if(BuildingList[i].Name == "WoodenFence03")
+			{
+				BuildingList[i].Name            = "Wooden Fence [C]";
+				BuildingList[i].Type            = "Structural";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "5*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_WoodenFence03;
+			}
+			else if(BuildingList[i].Name == "StoneFence")
+			{
+				BuildingList[i].Name            = "Stone Fence";
+				BuildingList[i].Type            = "Structural";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "10*Rock";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_StoneFence;
+			}
+			else if(BuildingList[i].Name == "HighPillar")
+			{
+				BuildingList[i].Name            = "High Pillar";
+				BuildingList[i].Type            = "Structural";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "5*Rock";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_HighPillar;
+			}
+			else if(BuildingList[i].Name == "Gate")
+			{
+				BuildingList[i].Name            = "Gate";
+				BuildingList[i].Type            = "Structural";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "5*Wood+15*Rock";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_Gate;
 			}
 			else if(BuildingList[i].Name == "Tent")
 			{
 				BuildingList[i].Name            = "Tent";
-				BuildingList[i].IsBuildable     = true;
+				BuildingList[i].Type            = "Decoration";
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "10*Wood";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_Tent;
+			}
+			else if(BuildingList[i].Name == "FirePillar")
+			{
+				BuildingList[i].Name            = "Fire Pillar";
+				BuildingList[i].Type            = "Decoration";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "10*Rock+5*Wood+2*Coin";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_FirePillar;
+			}
+			else if(BuildingList[i].Name == "LowStatue")
+			{
+				BuildingList[i].Name            = "Low Statue";
+				BuildingList[i].Type            = "Decoration";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "25*Rock+10*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_LowStatue;
+			}
+			else if(BuildingList[i].Name == "HighStatue")
+			{
+				BuildingList[i].Name            = "High Statue";
+				BuildingList[i].Type            = "Decoration";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "50*Rock+15*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_HighStatue;
+			}
+			else if(BuildingList[i].Name == "GargoyleStatue")
+			{
+				BuildingList[i].Name            = "Gargoyle Statue";
+				BuildingList[i].Type            = "Decoration";
+				BuildingList[i].IsUnlocked 		= true;
+				BuildingList[i].Recipe          = "15*Rock+5*Wood";
+				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_GargoyleStatue;
 			}
 		}
 	}

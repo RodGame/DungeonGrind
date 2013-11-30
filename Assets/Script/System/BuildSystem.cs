@@ -139,7 +139,16 @@ static class BuildSystem {
 		_NewBuilding.AddComponent<Rigidbody>();
 		_NewBuilding.GetComponent<Rigidbody>().useGravity = false;
 		_NewBuilding.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
-			
+		
+		if(_NewBuilding.GetComponent<Rigidbody>() == null)
+		{
+			Debug.Log ("FAIL - NO RIGIDBODY");	
+		}
+		else
+		{
+			Debug.Log("Rigidbody");	
+		}
+		
 		return _NewBuilding;
 	}
 }

@@ -5,9 +5,10 @@ public class Building {
 	
 	private int     _id;
 	private string  _name;
-	private bool    _isBuildable;
-	private bool    _isUnlocked;
-	private int     _nbrBuilt;
+	private string  _type = "NoType(DEBUG)"; // Utility, ,Structural, Decoration
+	private bool    _isBuildable = true;
+	private bool    _isUnlocked = false;
+	private int     _nbrBuilt = 0;
 	private string  _recipe;
 	private GameObject _BuildingPrefab;
 	
@@ -22,6 +23,12 @@ public class Building {
 	{
 		get {return _name; }
 		set {_name = value; }
+	}
+	
+	public string Type
+	{
+		get {return _type; }
+		set {_type = value; }
 	}
 	
 	public bool IsBuildable
@@ -58,8 +65,19 @@ public class Building {
 // Enumeration of all Compound
 public enum BuildingName {
 	CraftingTable,
+	WoodStorage,
+	WoodenBarrel,
 	WoodenWall,
-	WoodenFence,
-	WoodenFenceCurve,
-	Tent
+	WoodenFence01,
+	WoodenFence01Curve,
+	WoodenFence02,
+	WoodenFence03,
+	StoneFence,
+	HighPillar,
+	Gate,
+	Tent,
+	FirePillar,
+	LowStatue,
+	HighStatue,
+	GargoyleStatue
 }

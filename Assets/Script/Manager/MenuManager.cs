@@ -1,4 +1,4 @@
- using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class MenuManager : MonoBehaviour {
@@ -97,7 +97,7 @@ public class MenuManager : MonoBehaviour {
 	void NewGameDelegate(GameObject _ButtonClicked)
 	{
 		
-		if(_confirmTry == 0)
+		if(_confirmTry == 0 && SaveLoadSystem.IsSaveExist == true)
 		{
 			_confirmTry++;
 			_Button_NewGame.transform.FindChild("Label").GetComponent<UILabel>().text = "Are you sure you want to erase your save?";
@@ -117,7 +117,7 @@ public class MenuManager : MonoBehaviour {
 	// Delegate called when the Load Game button is clicked
 	void LoadGameDelegate(GameObject _ButtonClicked)
 	{
-		if(PlayerPrefs.GetInt ("IsSaveExist") == 1) //If save exist
+		if(SaveLoadSystem.IsSaveExist == true) //If save exist
 		{
 			StartGame();
 		}
@@ -181,6 +181,7 @@ public class MenuManager : MonoBehaviour {
 				_GameManager.MaxDungeonLevel = 20;
 				Character.InfluencePoints = 500;
 				Inventory.RessourceList[(int)RessourceName.Wood].CurValue = 1000;
+				Inventory.RessourceList[(int)RessourceName.Rock].CurValue = 1000;
 				Inventory.RessourceList[(int)RessourceName.Coin].CurValue = 1000;
 			}
 			StartGame();

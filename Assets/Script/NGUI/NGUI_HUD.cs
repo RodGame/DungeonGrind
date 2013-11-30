@@ -4,6 +4,11 @@ using System.Collections.Generic; // For List class;
 
 public class NGUI_HUD : MonoBehaviour {
 	
+	public int          _currentBuildingId     = -1;
+	public int          _currentBuildingTypeId = -1;
+	
+	private List<string> _buildingTypeList = new List<string> { "Utility", "Storage", "Structural", "Decoration"};  //, "NoType(DEBUG)"}; 
+	
 	private string     _UIRoot2DName;
 	private GameObject _UI_Root2D;
 	
@@ -13,21 +18,50 @@ public class NGUI_HUD : MonoBehaviour {
 	private string     _panelSkillName;
 	private GameObject _panelSkill;	
 	
+	private string     _panelBuildingName;
+	private GameObject _panelBuilding;	
+	private GameObject _BuildingTable;
+	private GameObject _BuildingTypeLabel;
+	private GameObject _BuildingInfoName;
+	private GameObject _BuildingInfoRecipe;
+	private GameObject _BuildingToTween;
+	
 	private PrefabManager _PrefabManager;
+	private GameManager   _GameManager;
 	
 	// Use this for initialization
 	void Start () {
 		_PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
+		_GameManager   = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 		
 		// Name of GameObject used for NGUI
 		_UIRoot2DName   = "UI Root (2D)";
 		_panelTaskName  = _UIRoot2DName + "/Camera/Window/Anchor/PanelTask";
 		_panelSkillName = _UIRoot2DName + "/Camera/Window/Anchor/PanelSkill";
+		_panelBuildingName = _UIRoot2DName + "/Camera/Window/Anchor/PanelBuilding";
 		
 		// Find the GameObjects used for NGUI
 		_UI_Root2D  = transform.FindChild(_UIRoot2DName).gameObject;
 		_panelTask  = transform.FindChild(_panelTaskName).gameObject;
 		_panelSkill = transform.FindChild(_panelSkillName).gameObject;
+		_panelBuilding = transform.FindChild(_panelBuildingName).gameObject;
+		
+		_BuildingTable = _panelBuilding.transform.FindChild("Building List/SubPanelBuilding/BuildingTable").gameObject;
+		if(_BuildingTable == null){Debug.LogWarning ("[NGUI_HUD.UpdateBuildList() - BuildingTable not found");}
+		
+		_BuildingTypeLabel = _panelBuilding.transform.FindChild("Building Type/Label - BuildingType").gameObject;
+		if(_BuildingTypeLabel == null){Debug.LogWarning ("[NGUI_HUD.UpdateBuildList() - BuildingType not found");}
+		
+		_BuildingInfoName = _panelBuilding.transform.FindChild("Building Info/Label (Building Name)").gameObject;
+		if(_BuildingInfoName == null){Debug.LogWarning ("[NGUI_HUD.BuildingType_Choose() - _BuildingInfoName not found");}
+		
+		_BuildingInfoRecipe = _panelBuilding.transform.FindChild("Building Info/Label (Recipe)").gameObject;
+		if(_BuildingInfoRecipe == null){Debug.LogWarning ("[NGUI_HUD.BuildingType_Choose() - _BuildingInfoName not found");}
+		
+		_BuildingToTween = transform.FindChild("BuildingToTween/BuildingMesh").gameObject;
+		if(_BuildingInfoRecipe == null){Debug.LogWarning ("[NGUI_HUD.DisplayBuildingTween() - _BuildingToTween not found");}
+		
+		// Initialize
 		UpdateAll();
 		CloseAll ();
 	}
@@ -36,6 +70,7 @@ public class NGUI_HUD : MonoBehaviour {
 	{
 		UpdateHUD ("TaskList");	
 		UpdateHUD ("SkillList");	
+		UpdateHUD ("BuildList");	
 	}
 	
 	// NGUI - Update
@@ -48,6 +83,9 @@ public class NGUI_HUD : MonoBehaviour {
 				break;
 			case "SkillList":
 				UpdateSkillList();
+				break;
+			case "BuildList":
+				UpdateBuildingList();
 				break;
 			default:
 				_UI_Root2D.SetActive (false);
@@ -86,7 +124,7 @@ public class NGUI_HUD : MonoBehaviour {
 				
 				// Setup the task title and description
 				
-				_titlePrefix = EvaluateTitlePrefix (Character.TaskList[i]);
+				_titlePrefix = EvaluateTaskTitlePrefix (Character.TaskList[i]);
 				if(Character.TaskList[i].IsFinished)
 				{
 					_NewTaskNGUI.transform.FindChild ("Label - Title").gameObject.GetComponent<UILabel>().text = (_titlePrefix + "[9E9E9E]"  + Character.TaskList[i].Title +"[-]");
@@ -128,7 +166,7 @@ public class NGUI_HUD : MonoBehaviour {
 				// Create a new skill object and put it in the NGUI task window
 				GameObject _NewSkillNGUI = Instantiate(_PrefabManager.NGUI_Skill_SkillTemplate, _panelSkill.transform.position, _panelSkill.transform.rotation) as GameObject;
 				_NewSkillNGUI.transform.parent = _SkillTable.transform;
-				_NewSkillNGUI.transform.localPosition = new Vector3(0.0f,0.0f - _nbrSkillAdded*38.0f,0.0f);
+				_NewSkillNGUI.transform.localPosition = new Vector3(0.0f,100.0f - _nbrSkillAdded*38.0f,0.0f);
 				_NewSkillNGUI.transform.localScale = new Vector3(1.0f,1.0f,1.0f);
 				
 				// Setup the skill information and progress
@@ -157,7 +195,43 @@ public class NGUI_HUD : MonoBehaviour {
 		}
 	}
 	
-	private string EvaluateTitlePrefix(Task _EvaluatedTask)
+	// Update all the game object in the BuildingList panel
+	private void UpdateBuildingList()
+	{
+		// Update Building Type Label
+		_BuildingTypeLabel.GetComponent<UILabel>().text = "[000000]" + _buildingTypeList[_currentBuildingTypeId] + "[-]";
+		
+		// Update Building List Table
+		UITable _UITable = _BuildingTable.GetComponent<UITable>();
+		int _nbrBuildingAdded = 0;
+		//string _titlePrefix;
+		
+		
+		// Destroy all children from the table
+		List<GameObject> children = new List<GameObject>();
+		foreach (Transform child in _BuildingTable.transform) children.Add(child.gameObject);
+		children.ForEach(child => Destroy(child));
+		
+		
+		// Loop throught all Building
+		for(int i = 0; i < Inventory.BuildingList.Length; i++)
+		{
+			// Add each building of the current type
+			if(Inventory.BuildingList[i].Type == _buildingTypeList[_currentBuildingTypeId])
+			{
+				GameObject _NewBuildingNGUI = NGUITools.AddChild (_BuildingTable,  _PrefabManager.NGUI_Build_BuildingTemplate);
+				_NewBuildingNGUI.transform.FindChild ("Label (Building Name)").gameObject.GetComponent<UILabel>().text = Inventory.BuildingList[i].Name; //"[66FA33][" + Inventory.BuildingList[i].Name + "][-]";
+				_NewBuildingNGUI.transform.FindChild ("SlicedSprite (Row Outline)").gameObject.GetComponent<OnClickBuildingType>().BuildingId = Inventory.BuildingList[i].Id;
+			}
+		}
+		_UITable.Reposition ();
+		
+		// Display selected building
+		
+	}
+	
+	// Write the TaskTitle with the good colors
+	private string EvaluateTaskTitlePrefix(Task _EvaluatedTask)
 	{
 		string _prefixOutput;
 		int _MissionType = _EvaluatedTask.MissionType;
@@ -195,23 +269,75 @@ public class NGUI_HUD : MonoBehaviour {
 			case "SkillList":
 				_panelSkill.SetActive (true);
 				break;
+			case "BuildList":
+				_panelBuilding.SetActive (true);
+				break;
 			default:
 				_UI_Root2D.SetActive (false);
 				Debug.LogWarning ("NGUI_HUD/Display() - Tried to opened an unknown window");
 				break;
 		}
 	}
-	
-	/*private void DisplayTaskNGUI()
-	{
 		
+	public void BuildingType_LeftClick()
+	{
+		if(_currentBuildingTypeId == 0)
+		{
+			_currentBuildingTypeId = _buildingTypeList.Count - 1;
+		}
+		else
+		{
+			_currentBuildingTypeId-- ;
+		}
+		
+		UpdateBuildingList();
 	}
 	
-	private void DisplaySkillNGUI()
+	public void BuildingType_RightClick()
 	{
+		if(_currentBuildingTypeId == _buildingTypeList.Count - 1)
+		{
+			_currentBuildingTypeId = 0;
+		}
+		else
+		{
+			_currentBuildingTypeId++ ;
+		}
 		
+		UpdateBuildingList();
+	}
+	
+	public void BuildingType_Choose(int _buildingIdSelected)
+	{
+		 _currentBuildingId = _buildingIdSelected;
+		_BuildingInfoName.GetComponent<UILabel>().text = Inventory.BuildingList[_buildingIdSelected].Name;
+		 List<string> _ListStringRessource = Utility.parseStringToListString(Inventory.BuildingList[_buildingIdSelected].Recipe);
+		string _Recipe = "";
+		for(int i = 0; i < _ListStringRessource.Count; i++)
+		{
+			_Recipe	+= _ListStringRessource[i] + "\n";
+		}
+		_BuildingInfoRecipe.GetComponent<UILabel>().text = _Recipe;
+	}
+	
+	private void DisplayBuildingTween()
+	{
+		//_currentBuildingId
+		TweenPosition _BuildingTweenPosition = _BuildingToTween.GetComponent<TweenPosition>();
+		_BuildingTweenPosition.PlayForward ();
+	}
+	
+	public void BuildingType_Build()
+	{
+		if(BuildSystem.BuildState == 0)
+		{
+			CloseAll();
+			BuildSystem.BuildBuilding (Inventory.BuildingList[_currentBuildingId]);
+			_GameManager.ChangeState ("Build");
+		}
+	}
 		
-	}*/
+	
 	
 	// NGUI - CLOSE
 	public void CloseAll()
@@ -219,6 +345,7 @@ public class NGUI_HUD : MonoBehaviour {
 		_UI_Root2D.SetActive (false);
 		_panelTask.SetActive (false);
 		_panelSkill.SetActive (false);
+		_panelBuilding.SetActive (false);
 	}
 	
 	

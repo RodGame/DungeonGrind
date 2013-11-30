@@ -9,21 +9,25 @@ public class BuildingManager : MonoBehaviour {
 	private GameObject _Player;
 	public bool _isObjectColliding = false;
 	public bool _isObjectActive    = false;
+	private Renderer _BuildingRenderer;
 	
 	// Use this for initialization
 	void Awake () {
 		_GameManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 		_Player	     = GameObject.FindGameObjectWithTag("Player");
+		if(gameObject.renderer != null)
+		{
+			_BuildingRenderer = gameObject.renderer;	
+		}
+		else
+		{
+			_BuildingRenderer = transform.GetComponentInChildren<Renderer>();	
+		}
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
 		_isObjectColliding = false;
-		
-		if(_isObjectActive == true)
-		{
-			
-		}
 	}	
 	
 	void Update()
@@ -38,14 +42,14 @@ public class BuildingManager : MonoBehaviour {
 	
 	void ColorBuilding()
 	{
+
 		if(_isObjectColliding == true)
 		{
-			gameObject.renderer.material.color = Color.red;	
-			Debug.Log ("Red Colliding");
+			_BuildingRenderer.material.color = Color.red;		
 		}
 		else
 		{
-			gameObject.renderer.material.color = Color.green;	
+			_BuildingRenderer.material.color = Color.green;	
 		}	
 	}
 	
@@ -124,11 +128,12 @@ public class BuildingManager : MonoBehaviour {
 	
 	private void ReleaseBuilding()
 	{
+		transform.GetComponentInChildren
 		if(_GameManager.CurState == "Build")
 		{
 			Debug.Log ("Object Released");
 			_isObjectActive = false;
-			gameObject.renderer.material.color = Color.white;
+			_BuildingRenderer.material.color = Color.white;
 			transform.parent = null;
 			BuildSystem.BuildState = 0;
 			_GameManager.ChangeState("Play");
