@@ -525,8 +525,8 @@ public class PlayerHUD : MonoBehaviour {
 				ToDisplayInBox = _newBoxToShow;
 				if(_isUseNGUI && _WindowsUsingNGUI.Contains(ToDisplayInBox))
 				{
+					_NGUI_HUD.Display(ToDisplayInBox);  // Displaying after update cause windows to sometime skip table reposition. Don't switch those two unnecessary.
 					_NGUI_HUD.UpdateHUD(ToDisplayInBox);
-					_NGUI_HUD.Display(ToDisplayInBox);
 				}
 				else
 				{

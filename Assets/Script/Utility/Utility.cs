@@ -39,7 +39,7 @@ static class Utility {
 		
 		if(_GO_Ground.name == "Terrain")
 		{
-			return Terrain.activeTerrain.SampleHeight(new Vector3(_x,_monsterHeight,_y)) + _offset;	
+			return Terrain.activeTerrain.SampleHeight(new Vector3(_x,0.0f,_y)) + _offset;	
 		}
 		else if(_GO_Ground.name == "DungeonGround")
 		{

@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour {
 	private Quaternion _originalRotation;
 	
 	private string _curAction  = "None";  // Current action being executed by the player (Fighting,Mining,Woodcutting...)
-	private string _curVersion = "0.38a"; // Current Version
+	private string _curVersion = "0.39"; // Current Version
 	private string _curZone    = "Camp";  // Current zone the player is in (Menu,Camp,Dungeon...)
 	private string _curState   = "Menu";  // Current State of the game (Menu, Play, Talk, Build)
 	private string _lastState  = "Menu";  // State at the end of the last frame
@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviour {
 		Character.TaskList[(int)TaskName.MainQuest0].Unlock(); // Unlock the first quest
 		Character.SetActiveTask(Character.TaskList[(int)TaskName.MainQuest0]); // Set the first quest as active task
 		ItemInventory.EquipWeapon (Inventory.WeaponList[(int)WeaponName.RockSword]);
-		//ItemInventory.AddItem(Inventory.WeaponList[(int)WeaponName.Hammer]);
+		ItemInventory.AddItem(Inventory.WeaponList[(int)WeaponName.Hammer]);
 	}
 	
 	// Update is called once per frame
@@ -542,19 +542,21 @@ public class GameManager : MonoBehaviour {
 	{
 		//Debug.Log ("BuildState : " + BuildSystem.BuildState + ", _curState : " + _curState);
 		//Debug.Log ("_collidedObj : " + _collidedObj.name    + ", Weapon : " + (ItemInventory.EquippedWeapon.IdWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon));
-		if(BuildSystem.BuildState == 0)
+		
+		int _idEquippedWeapon;
+		if(ItemInventory.EquippedWeapon == null){_idEquippedWeapon = -1;} else {_idEquippedWeapon = ItemInventory.EquippedWeapon.IdWeapon;}
+		
+		if(BuildSystem.BuildState == 0 && _collidedObj != null)
 		{
 			// Verify that there is an EquippedWeapon
-			int _idEquippedWeapon;
-			if(ItemInventory.EquippedWeapon == null){_idEquippedWeapon = -1;} else {_idEquippedWeapon = ItemInventory.EquippedWeapon.IdWeapon;}
+			
 			
 			// If equipped item is an hammer, start the building creation. Else, interact with the object.
 			if(_idEquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp" && _collidedObj.tag != "Interactive" && _collidedObj.tag != "Spartan" )
 			{
-				Debug.Log("ChangeView");
 				_PlayerHUD.ChangeBoxView("BuildList");
 			}
-			else if(_collidedObj != null)
+			else
 			{
 				float _distanceInteraction = 5.0f;
 				if(ItemInventory.EquippedWeapon != null)
@@ -612,6 +614,13 @@ public class GameManager : MonoBehaviour {
 				{
 					DoAction("Default");
 				}
+			}
+		}
+		else
+		{
+			if(_idEquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && _curState == "Play" && Application.loadedLevelName == "Camp")
+			{
+				_PlayerHUD.ChangeBoxView("BuildList");
 			}
 			else
 			{
@@ -708,19 +717,35 @@ public class GameManager : MonoBehaviour {
 	public void RightClick(Collider _collidedObj)
 	{
 		float distanceBuild = 7.0f;
+		BuildingManager _BuildingManager = null;
 		
 		// Verify that there is an EquippedWeapon
 		int _idEquippedWeapon;
 		if(ItemInventory.EquippedWeapon == null){_idEquippedWeapon = -1;} else {_idEquippedWeapon = ItemInventory.EquippedWeapon.IdWeapon;}
 		
+		// If the player use an hammer in the camp
 		if(_idEquippedWeapon == Inventory.WeaponList[(int)WeaponName.Hammer].IdWeapon && Application.loadedLevelName == "Camp")
 		{
 			// Test for a BuildingManager component to identify building.
 			if(_collidedObj != null)
 			{
-				if(_collidedObj.gameObject.GetComponent<BuildingManager>() != null && Vector3.Distance (_Player.transform.position, _collidedObj.transform.position) < distanceBuild)
+				Debug.Log("Looking for Building Manager");
+				if(_collidedObj.gameObject.GetComponent<BuildingManager>() != null)
 				{
-					_collidedObj.gameObject.GetComponent<BuildingManager>().ActivateBuilding();
+					_BuildingManager = _collidedObj.gameObject.GetComponent<BuildingManager>();
+				}
+				else if (_collidedObj.transform.parent.GetComponent<BuildingManager>() != null)
+				{
+					_BuildingManager = _collidedObj.transform.parent.GetComponent<BuildingManager>();
+				}
+				else
+				{
+					Debug.LogWarning ("[GameManager.RightClick() - BuildingManager not found");	// Not necessary warning worthy but will help for now. To verify
+				}
+				
+				if(_BuildingManager != null && Vector3.Distance (_Player.transform.position, _collidedObj.transform.position) < distanceBuild)
+				{
+					_BuildingManager.ActivateBuilding();
 				}
 			}			
 		}

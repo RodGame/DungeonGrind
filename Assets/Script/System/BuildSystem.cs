@@ -8,7 +8,7 @@ static class BuildSystem {
 	static GameManager   _GameManager   = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<GameManager>();
 	static PrefabManager _PrefabManager = GameObject.FindGameObjectWithTag("GameMaster").GetComponent<PrefabManager>();
 	static GameObject    _Player        = GameObject.FindGameObjectWithTag("Player");
-	static private GameObject _ActiveBuilding;
+	//static private GameObject _ActiveBuilding;
 	static private int _buildState; //0 = No build, 1 = Currently Building, 2 = Built
 	// Structure that contain the position of the start/end of a wall to be created
 	static public List<GameObject> CreatedBuildingList = new List<GameObject>();
@@ -16,10 +16,10 @@ static class BuildSystem {
 	static private Vector3 _CartPosition = new Vector3(1.0f, -1.25f, -12.5f);
 	static private Quaternion _CartRotation = Quaternion.Euler (270.0f, 250.0f, 0.0f);
 	
-	static public GameObject ActiveBuilding
+	/*static public GameObj	ect ActiveBuilding
 	{ 
 		get {return _ActiveBuilding; }
-	}
+	}*/
 	
 	static public int BuildState
 	{ 

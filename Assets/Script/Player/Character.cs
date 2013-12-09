@@ -187,7 +187,7 @@ static class Character {
 				TaskList[i].Title = "Talk to Spartan";
 				TaskList[i].Description = "Maybe it's the big sign over it's head, but I feel like he want me to talk to him";
 				TaskList[i].Requirement = "None";				
-				TaskList[i].Reward = "[ITEM]1*Hammer";
+				TaskList[i].Reward = "None";
 				TaskList[i].MissionType = 1;
 			}
 			else if(_taskName == "MainQuest1")

@@ -109,6 +109,7 @@ static class Inventory {
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "5*Rock";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_HighPillar;
+				BuildingList[i].PositionOffset  = new Vector3(0.0f,0.25f,0.0f);
 			}
 			else if(BuildingList[i].Name == "Gate")
 			{
@@ -117,6 +118,7 @@ static class Inventory {
 				BuildingList[i].IsUnlocked 		= true;
 				BuildingList[i].Recipe          = "5*Wood+15*Rock";
 				BuildingList[i].BuildingPrefab  = _PrefabManager.Building_Gate;
+				BuildingList[i].PositionOffset  = new Vector3(0.0f,2.5f,0.0f);
 			}
 			else if(BuildingList[i].Name == "Tent")
 			{

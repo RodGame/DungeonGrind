@@ -3,8 +3,9 @@ using System.Collections;
 
 public class BuildingManager : MonoBehaviour {
 	
-	public int Id;
-	public int buildingId;
+	//TODO: Verify the scope of those 2 variables and where they are assigned
+	public int Id;         // Unique Id that is assigned to each created building
+	public int buildingId; // Id to identifie the building type
 	private GameManager _GameManager;
 	private GameObject _Player;
 	public bool _isObjectColliding = false;
@@ -58,7 +59,7 @@ public class BuildingManager : MonoBehaviour {
 		// Test for drop of building
 		if(Input.GetMouseButtonDown(0))
 		{
-			Debug.Log ("On click, Collision  : " + _isObjectColliding);
+			//Debug.Log ("On click, Collision  : " + _isObjectColliding);
 			if(_isObjectColliding == false)
 			{
 				ReleaseBuilding();
@@ -89,22 +90,23 @@ public class BuildingManager : MonoBehaviour {
 	
 	public void ControlBuilding()
 	{
-		float _rotaSpeed = 2.0f;
+	
+		float _rotaSpeed = 50.0f;
 		float _moveSpeed = 0.3f;
 		float _newPosX = transform.position.x;
 		float _newPosZ = transform.position.z;
-		float _newPosY = Utility.FindTerrainHeight(_newPosX, _newPosZ,-0.75f);
+		float _newPosY = Utility.FindTerrainHeight(_newPosX, _newPosZ,0.0f) - _BuildingRenderer.bounds.size.y*1/3 + Inventory.BuildingList[buildingId].PositionOffset.y;
 		
 		transform.position = new Vector3(_newPosX, _newPosY, _newPosZ);	
 		
 		// Test for inputs
 		if(Input.GetKey(KeyCode.Q))
 		{
-			transform.RotateAroundLocal(new Vector3(0.0f,1.0f,0.0f), _rotaSpeed*Time.deltaTime);
+			transform.Rotate(new Vector3(0.0f,1.0f,0.0f), _rotaSpeed*Time.deltaTime);
 		}
 		else if(Input.GetKey(KeyCode.E))
 		{
-			transform.RotateAroundLocal(new Vector3(0.0f,1.0f,0.0f), -_rotaSpeed*Time.deltaTime);
+			transform.Rotate(new Vector3(0.0f,1.0f,0.0f), -_rotaSpeed*Time.deltaTime);
 		} 
 		else if(Input.GetKey(KeyCode.R))
 		{
@@ -128,10 +130,9 @@ public class BuildingManager : MonoBehaviour {
 	
 	private void ReleaseBuilding()
 	{
-		transform.GetComponentInChildren
 		if(_GameManager.CurState == "Build")
 		{
-			Debug.Log ("Object Released");
+			//Debug.Log ("Object Released");
 			_isObjectActive = false;
 			_BuildingRenderer.material.color = Color.white;
 			transform.parent = null;
@@ -141,7 +142,7 @@ public class BuildingManager : MonoBehaviour {
 		
 	}
 	
-	private void DestroyBuilding()
+ 	private void DestroyBuilding()
 	{
 		Debug.Log ("Destroyed Item");
 		BuildSystem.CreatedBuildingList.Remove(gameObject);

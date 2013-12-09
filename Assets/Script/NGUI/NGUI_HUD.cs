@@ -4,10 +4,10 @@ using System.Collections.Generic; // For List class;
 
 public class NGUI_HUD : MonoBehaviour {
 	
-	public int          _currentBuildingId     = -1;
-	public int          _currentBuildingTypeId = -1;
+	private int          _currentBuildingId     = -1;
+	private int          _currentBuildingTypeId = 0;
 	
-	private List<string> _buildingTypeList = new List<string> { "Utility", "Storage", "Structural", "Decoration"};  //, "NoType(DEBUG)"}; 
+	private List<string> _buildingTypeList = new List<string> {"Utility", "Storage", "Structural", "Decoration"};  //, "NoType(DEBUG)"}; 
 	
 	private string     _UIRoot2DName;
 	private GameObject _UI_Root2D;
@@ -28,6 +28,8 @@ public class NGUI_HUD : MonoBehaviour {
 	
 	private PrefabManager _PrefabManager;
 	private GameManager   _GameManager;
+	
+	private bool _isBuildingSelected = false;
 	
 	// Use this for initialization
 	void Start () {
@@ -61,7 +63,7 @@ public class NGUI_HUD : MonoBehaviour {
 		_BuildingToTween = transform.FindChild("BuildingToTween/BuildingMesh").gameObject;
 		if(_BuildingInfoRecipe == null){Debug.LogWarning ("[NGUI_HUD.DisplayBuildingTween() - _BuildingToTween not found");}
 		
-		// Initialize
+		// Initialize NGUI		
 		UpdateAll();
 		CloseAll ();
 	}
@@ -198,6 +200,7 @@ public class NGUI_HUD : MonoBehaviour {
 	// Update all the game object in the BuildingList panel
 	private void UpdateBuildingList()
 	{
+		
 		// Update Building Type Label
 		_BuildingTypeLabel.GetComponent<UILabel>().text = "[000000]" + _buildingTypeList[_currentBuildingTypeId] + "[-]";
 		
@@ -212,22 +215,27 @@ public class NGUI_HUD : MonoBehaviour {
 		foreach (Transform child in _BuildingTable.transform) children.Add(child.gameObject);
 		children.ForEach(child => Destroy(child));
 		
-		
 		// Loop throught all Building
 		for(int i = 0; i < Inventory.BuildingList.Length; i++)
 		{
 			// Add each building of the current type
 			if(Inventory.BuildingList[i].Type == _buildingTypeList[_currentBuildingTypeId])
 			{
+				if(_isBuildingSelected == false)
+				{
+					BuildingType_Choose(Inventory.BuildingList[i].Id);
+					_isBuildingSelected = true;
+				}
 				GameObject _NewBuildingNGUI = NGUITools.AddChild (_BuildingTable,  _PrefabManager.NGUI_Build_BuildingTemplate);
 				_NewBuildingNGUI.transform.FindChild ("Label (Building Name)").gameObject.GetComponent<UILabel>().text = Inventory.BuildingList[i].Name; //"[66FA33][" + Inventory.BuildingList[i].Name + "][-]";
 				_NewBuildingNGUI.transform.FindChild ("SlicedSprite (Row Outline)").gameObject.GetComponent<OnClickBuildingType>().BuildingId = Inventory.BuildingList[i].Id;
+				//Debug.Log(Inventory.BuildingList[i].Name);
 			}
 		}
+		
 		_UITable.Reposition ();
 		
 		// Display selected building
-		
 	}
 	
 	// Write the TaskTitle with the good colors
@@ -289,7 +297,7 @@ public class NGUI_HUD : MonoBehaviour {
 		{
 			_currentBuildingTypeId-- ;
 		}
-		
+		_isBuildingSelected = false;
 		UpdateBuildingList();
 	}
 	
@@ -303,7 +311,7 @@ public class NGUI_HUD : MonoBehaviour {
 		{
 			_currentBuildingTypeId++ ;
 		}
-		
+		_isBuildingSelected = false;
 		UpdateBuildingList();
 	}
 	

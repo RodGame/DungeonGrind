@@ -11,6 +11,7 @@ public class Building {
 	private int     _nbrBuilt = 0;
 	private string  _recipe;
 	private GameObject _BuildingPrefab;
+	private Vector3    _positionOffset = new Vector3(0.0f,0.0f,0.0f);
 	
 	
 	public int Id
@@ -60,6 +61,12 @@ public class Building {
 		get {return _BuildingPrefab; }
 		set {_BuildingPrefab = value; }
 	}
+	
+	public Vector3 PositionOffset
+	{
+		get {return _positionOffset; }
+		set {_positionOffset = value; }
+	}
 }
 
 // Enumeration of all Compound
@@ -72,7 +79,7 @@ public enum BuildingName {
 	WoodenFence01Curve,
 	WoodenFence02,
 	WoodenFence03,
-	StoneFence,
+	StoneFence, // Remove StoneFence because it has many GO and need an uptade to the building system(Collision, modification on it from player)
 	HighPillar,
 	Gate,
 	Tent,
